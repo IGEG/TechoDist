@@ -2,6 +2,7 @@ using Techodist.BuildingBlocks.Web.Extensions;
 using Techodist.Catalog.Application.Features.Categories.Commands.CreateCategory;
 using Techodist.Catalog.Application.Features.Categories.Queries.GetCategories;
 using MediatR;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Techodist.Catalog.Api.Controllers;
@@ -20,8 +21,9 @@ public sealed class CategoriesController(ISender sender) : ControllerBase
         return Ok(result);
     }
 
-    /// <summary>Создание категории (для админ-панели).</summary>
+    /// <summary>Создание категории (для админ-панели). Требует access-токен администратора.</summary>
     [HttpPost]
+    [Authorize(Roles = AuthenticationExtensions.AdminRoles)]
     public async Task<IActionResult> Create(
         [FromBody] CreateCategoryCommand command,
         CancellationToken cancellationToken)

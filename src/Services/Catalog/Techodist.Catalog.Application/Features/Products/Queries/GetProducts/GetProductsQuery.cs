@@ -1,3 +1,4 @@
+using Techodist.BuildingBlocks.Core.Pagination;
 using Techodist.Catalog.Application.Abstractions;
 using Techodist.Catalog.Application.Dtos;
 using Techodist.Catalog.Application.Models;

@@ -1,4 +1,4 @@
-using Techodist.Catalog.Application.Models;
+using Techodist.BuildingBlocks.Core.Pagination;
 using Xunit;
 
 namespace Techodist.Catalog.UnitTests.Application;

@@ -1,5 +1,5 @@
 using System.Reflection;
-using Techodist.Catalog.Application.Behaviours;
+using Techodist.BuildingBlocks.Application.Behaviours;
 using Techodist.Catalog.Application.Common;
 using FluentValidation;
 using Mapster;

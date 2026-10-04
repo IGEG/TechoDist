@@ -14,6 +14,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\Techodist.Catalog.Domain\Techodist.Catalog.Domain.csproj" />
+    <ProjectReference Include="..\..\..\BuildingBlocks\Techodist.BuildingBlocks.Application\Techodist.BuildingBlocks.Application.csproj" />
     <ProjectReference Include="..\..\..\BuildingBlocks\Techodist.BuildingBlocks.Core\Techodist.BuildingBlocks.Core.csproj" />
   </ItemGroup>
 

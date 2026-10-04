@@ -3,6 +3,7 @@ using Techodist.Catalog.Application.Features.Products.Commands.CreateProduct;
 using Techodist.Catalog.Application.Features.Products.Queries.GetProductById;
 using Techodist.Catalog.Application.Features.Products.Queries.GetProducts;
 using MediatR;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Techodist.Catalog.Api.Controllers;
@@ -30,8 +31,9 @@ public sealed class ProductsController(ISender sender) : ControllerBase
         return result.IsSuccess ? Ok(result.Value) : result.Error.ToProblemResult();
     }
 
-    /// <summary>Создание товара (для админ-панели).</summary>
+    /// <summary>Создание товара (для админ-панели). Требует access-токен администратора.</summary>
     [HttpPost]
+    [Authorize(Roles = AuthenticationExtensions.AdminRoles)]
     public async Task<IActionResult> Create(
         [FromBody] CreateProductCommand command,
         CancellationToken cancellationToken)
