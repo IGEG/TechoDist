@@ -1,0 +1,20 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <RootNamespace>EcoTech.Catalog.UnitTests</RootNamespace>
+    <IsPackable>false</IsPackable>
+    <IsTestProject>true</IsTestProject>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.NET.Test.Sdk" />
+    <PackageReference Include="xunit" />
+    <PackageReference Include="xunit.runner.visualstudio" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\EcoTech.Catalog.Application\EcoTech.Catalog.Application.csproj" />
+    <ProjectReference Include="..\..\EcoTech.Catalog.Domain\EcoTech.Catalog.Domain.csproj" />
+  </ItemGroup>
+
+</Project>

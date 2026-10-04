@@ -56,7 +56,7 @@ dotnet build EcoTech.sln
 
 - [x] Фаза 0 — подготовка окружения и ADR
 - [x] Фаза 1 — скелет монорепо + BuildingBlocks + docker-compose инфраструктуры
-- [ ] Фаза 2 — Catalog Service (эталонный вертикальный срез)
+- [x] Фаза 2 — Catalog Service (эталонный вертикальный срез: Domain/Application/Infrastructure/Api + миграция + 18 unit-тестов)
 - [ ] Фаза 3 — Identity Service (OpenIddict)
 - [ ] Фаза 4 — API Gateway (YARP) + скелет фронтенда
 - [ ] Фаза 5 — Basket Service

@@ -38,6 +38,7 @@ public static class WebExtensions
         });
 
         services.AddProblemDetails();
+        services.AddExceptionHandler<ValidationExceptionHandler>();
         services.AddExceptionHandler<GlobalExceptionHandler>();
         services.AddHealthChecks();
 
