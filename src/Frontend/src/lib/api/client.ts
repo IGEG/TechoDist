@@ -16,7 +16,11 @@ export interface ApiProblem {
 }
 
 interface AuthHooks {
-  getAccessToken: () => string | null;
+  /**
+   * Access-токен для очередного запроса. Разрешён асинхронный результат: перед запросом
+   * клиент может продлить сессию по refresh-токену (см. features/auth/auth-store.ts).
+   */
+  getAccessToken: () => string | null | Promise<string | null>;
   onUnauthorized?: () => void;
 }
 
@@ -36,8 +40,8 @@ export const apiClient: AxiosInstance = axios.create({
   withCredentials: true,
 });
 
-apiClient.interceptors.request.use((config: InternalAxiosRequestConfig) => {
-  const token = authHooks.getAccessToken();
+apiClient.interceptors.request.use(async (config: InternalAxiosRequestConfig) => {
+  const token = await authHooks.getAccessToken();
 
   if (token) {
     config.headers.set('Authorization', `Bearer ${token}`);

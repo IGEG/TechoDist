@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next';
 import { Link, NavLink } from 'react-router';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/features/auth/use-auth';
+import { BasketLink } from '@/features/basket/BasketLink';
 import { cn } from '@/lib/utils';
 
 const navLinkClass = ({ isActive }: { isActive: boolean }): string =>
@@ -34,6 +35,7 @@ export function SiteHeader() {
           <NavLink to="/catalog" className={navLinkClass}>
             {t('nav.catalog')}
           </NavLink>
+          <BasketLink />
           <NavLink to="/admin" className={navLinkClass}>
             {t('nav.admin')}
           </NavLink>
@@ -70,6 +72,9 @@ export function SiteHeader() {
         <nav className="flex flex-col gap-1 border-t border-graphite-100 px-4 py-3 md:hidden">
           <NavLink to="/catalog" className={navLinkClass} onClick={() => setMenuOpen(false)}>
             {t('nav.catalog')}
+          </NavLink>
+          <NavLink to="/cart" className={navLinkClass} onClick={() => setMenuOpen(false)}>
+            {t('nav.cart')}
           </NavLink>
           <NavLink to="/admin" className={navLinkClass} onClick={() => setMenuOpen(false)}>
             {t('nav.admin')}

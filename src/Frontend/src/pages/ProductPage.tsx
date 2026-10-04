@@ -4,6 +4,7 @@ import { Link, useParams } from 'react-router';
 import { Alert } from '@/components/ui/alert';
 import { buttonVariants } from '@/components/ui/button-variants';
 import { Badge, Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { AddToBasketButton } from '@/features/basket/AddToBasketButton';
 import { useProduct } from '@/features/catalog/use-catalog';
 import { cn, formatPrice } from '@/lib/utils';
 
@@ -90,6 +91,8 @@ export function ProductPage() {
               ? formatPrice(details.price, details.currency)
               : t('product.priceOnRequest')}
           </p>
+
+          <AddToBasketButton productId={details.id} />
 
           {details.description ? (
             <Card>

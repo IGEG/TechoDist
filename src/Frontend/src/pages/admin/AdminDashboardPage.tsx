@@ -7,12 +7,15 @@ import { Badge, Card, CardContent, CardHeader, CardTitle } from '@/components/ui
 import { useAuth } from '@/features/auth/use-auth';
 import { cn } from '@/lib/utils';
 
-/** Разделы админ-панели: наполняются в следующих фазах, здесь — карта развития. */
+/**
+ * Разделы админ-панели. Товары и категории открыты (фаза 8); заказы и пользователи —
+ * следующие срезы админки, ссылки появятся вместе с их страницами.
+ */
 const sections = [
-  { key: 'products', phase: 8 },
-  { key: 'categories', phase: 8 },
-  { key: 'users', phase: 8 },
-  { key: 'orders', phase: 7 },
+  { key: 'products', to: '/admin/products' },
+  { key: 'categories', to: '/admin/categories' },
+  { key: 'orders', to: null },
+  { key: 'users', to: null },
 ] as const;
 
 export function AdminDashboardPage() {
@@ -59,7 +62,16 @@ export function AdminDashboardPage() {
               <span className="text-sm font-medium text-graphite-800">
                 {t(`admin.sections.${section.key}`)}
               </span>
-              <Badge tone="muted">{t('admin.soon', { phase: section.phase })}</Badge>
+              {section.to ? (
+                <Link
+                  to={section.to}
+                  className={cn(buttonVariants({ variant: 'outline', size: 'sm' }), 'self-start')}
+                >
+                  {t('admin.manage')}
+                </Link>
+              ) : (
+                <Badge tone="muted">{t('admin.soon')}</Badge>
+              )}
             </CardContent>
           </Card>
         ))}

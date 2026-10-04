@@ -83,3 +83,109 @@ export interface ProductListParams {
   pageSize?: number;
   sort?: string;
 }
+
+/** Параметры GET /api/products/admin (админский срез: черновики и архив тоже). */
+export interface AdminProductListParams {
+  status?: string;
+  search?: string;
+  page?: number;
+  pageSize?: number;
+}
+
+/** Тело создания/изменения товара (CreateProductCommand / UpdateProductRequest). */
+export interface ProductWriteInput {
+  name: string;
+  categoryId: string;
+  price: number;
+  shortDescription?: string | null;
+  description?: string | null;
+  solventType?: string | null;
+  volumeLiters?: number | null;
+  slug?: string | null;
+}
+
+/** Тело создания категории (CreateCategoryCommand). */
+export interface CategoryWriteInput {
+  name: string;
+  description?: string | null;
+  parentId?: string | null;
+  sortOrder?: number;
+  slug?: string | null;
+}
+
+/** Basket API · BasketItemDto — снимок товара на момент добавления в корзину. */
+export interface BasketItem {
+  productId: string;
+  productName: string;
+  imageUrl: string | null;
+  unitPrice: number;
+  currency: string;
+  quantity: number;
+  lineTotal: number;
+}
+
+/** Basket API · BasketDto. */
+export interface Basket {
+  basketId: string;
+  items: BasketItem[];
+  totalQuantity: number;
+  totalAmount: number;
+  currency: string;
+}
+
+/** Order API · OrderItemDto. */
+export interface OrderItem {
+  productId: string;
+  productName: string;
+  imageUrl: string | null;
+  unitPrice: number;
+  currency: string;
+  quantity: number;
+  lineTotal: number;
+}
+
+/** Order API · OrderDto — заявка целиком. */
+export interface Order {
+  id: string;
+  number: string;
+  status: string;
+  customerName: string;
+  customerEmail: string;
+  customerPhone: string | null;
+  comment: string | null;
+  managerComment: string | null;
+  preferredChannel: string;
+  priority: string;
+  basketId: string | null;
+  items: OrderItem[];
+  totalQuantity: number;
+  totalAmount: number;
+  currency: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+/** Order API · OrderSummaryDto — строка списка заявок (без позиций). */
+export interface OrderSummary {
+  id: string;
+  number: string;
+  status: string;
+  customerName: string;
+  customerEmail: string;
+  priority: string;
+  totalQuantity: number;
+  totalAmount: number;
+  currency: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+/** Тело POST /api/orders (SubmitOrderRequest): контакты вместо оплаты. */
+export interface SubmitOrderInput {
+  customerName: string;
+  customerEmail: string;
+  customerPhone?: string;
+  comment?: string;
+  preferredChannel?: string;
+  priority?: string;
+}

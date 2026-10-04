@@ -103,7 +103,13 @@ tests/Service.*.Tests    -> Unit + Integration (Testcontainers)
 ```
 Браузер (SPA, http://localhost:5173)
   -> API Gateway (http://localhost:5100) — единственный адрес в VITE_API_BASE_URL
-     /catalog/api/**         -> Catalog (префикс снимается трансформом)
+     /catalog/api/products          GET         -> Catalog, витрина (только опубликованное)
+     /catalog/api/products/admin    GET         -> Catalog, админский срез: черновики и архив
+     /catalog/api/products          POST        -> Catalog, создание товара
+     /catalog/api/products/{id}     PUT|DELETE  -> Catalog, изменение и удаление черновика
+     /catalog/api/products/{id}/publish|archive  -> Catalog, публикация и снятие с продажи
+     /catalog/api/categories        POST        -> Catalog, создание категории
+     /catalog/api/**                GET         -> Catalog, остальное чтение (префикс снимается трансформом)
      /identity/connect/token -> Identity (grant_type=password | refresh_token)
      /identity/api/**        -> Identity (AuthorizationPolicy techodist-admin-only)
      /basket/api/**          -> Basket (без авторизации: корзина гостя по HttpOnly-cookie)
@@ -111,16 +117,23 @@ tests/Service.*.Tests    -> Unit + Integration (Testcontainers)
      /order/api/orders/number/* -> Order, GET (статус заявки по номеру из письма, без токена)
      /order/api/orders/...      -> Order, остальные методы (AuthorizationPolicy techodist-admin)
      /search/api/search/products -> Search (публичный полнотекстовый поиск по индексу, без токена)
+  -> access-токен на исходе (запас 60 с): клиент продлевает сессию refresh-токеном до запроса
   -> 401 от любого сервиса: store сбрасывает токены, guard уводит на /admin/login
 ```
 
-- Маршруты витрины: `/catalog` (поиск, фильтры, сортировка, пагинация), `/catalog/:productId`,
-  `/admin/login`, `/admin` (роли `Admin`/`Manager`).
+- Маршруты витрины: `/catalog` (поиск, фильтры, пагинация), `/catalog/:productId`, `/cart`,
+  `/checkout`, `/orders` и `/orders/:number` (статус заявки по номеру из письма).
+- Маршруты админки (роли `Admin`/`Manager`, ленивые чанки под `RequireAuth`): `/admin`,
+  `/admin/products` (+ `/new`, `/:productId/edit`) и `/admin/categories`.
 - Состояние фильтров каталога живёт в query-string, ключи TanStack Query выводятся из тех же
   параметров: кэш переиспользуется, ссылкой на выдачу можно делиться.
-- Публичные страницы загружаются сразу, админ-разделы — ленивыми чанками под `RequireAuth`.
+- Источник истины — сервер: состав корзины приходит из Basket, заявка создаётся из неё по cookie,
+  а мутации пишут ответ в кэш (бейдж корзины и список обновляются без повторного GET).
+- Все изменяющие операции каталога закрыты на шлюзе ролью (`techodist-admin`) и повторно проверяются
+  сервисом: витрине доступны только чтение и публичные гостевые вызовы.
 - CORS шлюза разрешает origin фронтенда (`Cors:AllowedOrigins`); префикс сервиса в пути
-  добавляет сам фронтенд — шлюз его снимает перед проксированием.
+  добавляет сам фронтенд — шлюз его снимает перед проксированием. Кэш, инвалидация и продление
+  токена описаны в [ADR 0010](adr/0010-frontend-catalog-cart-checkout.md).
 
 ### 4.5 Корзина гостя (ADR 0005)
 

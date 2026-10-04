@@ -14,3 +14,4 @@
 | [0007](0007-yarp-api-gateway.md) | YARP как API Gateway | Accepted |
 | [0008](0008-observability-otel-stack.md) | Наблюдаемость: OpenTelemetry + Grafana stack | Accepted |
 | [0009](0009-search-service-elasticsearch.md) | Search Service: Elasticsearch как индекс каталога | Accepted |
+| [0010](0010-frontend-catalog-cart-checkout.md) | Фронтенд витрины и админки: корзина, кэш, продление токена | Accepted |

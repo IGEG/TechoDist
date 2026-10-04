@@ -8,6 +8,7 @@
   [Basket](../src/Services/Basket/README.md), [Order](../src/Services/Order/README.md),
   [Notification](../src/Services/Notification/README.md),
   [Search](../src/Services/Search/README.md),
+  [фронтенд (SPA)](../src/Frontend/README.md),
   [docker-compose (инфраструктура)](../deploy/docker-compose/README.md).
 
 ## Быстрая навигация по решениям (ADR)
@@ -23,3 +24,4 @@
 | 0007 | YARP как API Gateway |
 | 0008 | Наблюдаемость: OpenTelemetry + Prometheus/Grafana/Loki/Jaeger |
 | 0009 | Search Service: Elasticsearch как индекс каталога |
+| 0010 | Фронтенд витрины и админки: серверная корзина, кэш, продление токена |

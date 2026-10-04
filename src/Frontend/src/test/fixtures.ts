@@ -1,10 +1,19 @@
 import { HttpResponse, http } from 'msw';
 import { API_BASE_URL } from '@/lib/api/client';
-import type { Category, PagedResult, ProductDetails, ProductSummary } from '@/lib/api/types';
+import type {
+  Basket,
+  Category,
+  Order,
+  PagedResult,
+  ProductDetails,
+  ProductSummary,
+} from '@/lib/api/types';
 import type { AuthSession } from '@/features/auth/types';
 
-/** Префикс Catalog API за шлюзом — тот же, что в catalog-api.ts. */
+/** Префиксы сервисов за шлюзом — те же, что в basket-api/order-api/admin-catalog-api. */
 export const catalogApiUrl = `${API_BASE_URL}/catalog/api`;
+export const basketApiUrl = `${API_BASE_URL}/basket/api/basket`;
+export const orderApiUrl = `${API_BASE_URL}/order/api/orders`;
 
 export const sampleCategories: Category[] = [
   {
@@ -99,4 +108,72 @@ export function productsHandler(
 
 export function categoriesHandler() {
   return http.get(`${catalogApiUrl}/categories`, () => HttpResponse.json(sampleCategories));
+}
+
+/** Гостевая корзина с одним товаром: количество 2, сумма 2 500 ₽. */
+export function sampleBasket(overrides: Partial<Basket> = {}): Basket {
+  return {
+    basketId: 'basket-1',
+    items: [
+      {
+        productId: 'prod-1',
+        productName: 'Установка регенерации TD-100',
+        imageUrl: null,
+        unitPrice: 1250,
+        currency: 'RUB',
+        quantity: 2,
+        lineTotal: 2500,
+      },
+    ],
+    totalQuantity: 2,
+    totalAmount: 2500,
+    currency: 'RUB',
+    ...overrides,
+  };
+}
+
+export const emptyBasket: Basket = {
+  basketId: 'basket-1',
+  items: [],
+  totalQuantity: 0,
+  totalAmount: 0,
+  currency: 'RUB',
+};
+
+/** Чтение корзины: состав мутаций тесты проверяют отдельными обработчиками. */
+export function basketHandler(basket: Basket = sampleBasket()) {
+  return http.get(basketApiUrl, () => HttpResponse.json(basket));
+}
+
+export function sampleOrder(overrides: Partial<Order> = {}): Order {
+  return {
+    id: 'order-1',
+    number: 'TD-20261004-00042',
+    status: 'Pending',
+    customerName: 'Иван Петров',
+    customerEmail: 'ivan@example.com',
+    customerPhone: '+7 999 000-00-00',
+    comment: null,
+    managerComment: null,
+    preferredChannel: 'Email',
+    priority: 'Standard',
+    basketId: 'basket-1',
+    items: [
+      {
+        productId: 'prod-1',
+        productName: 'Установка регенерации TD-100',
+        imageUrl: null,
+        unitPrice: 1250,
+        currency: 'RUB',
+        quantity: 2,
+        lineTotal: 2500,
+      },
+    ],
+    totalQuantity: 2,
+    totalAmount: 2500,
+    currency: 'RUB',
+    createdAt: '2026-10-04T12:00:00Z',
+    updatedAt: '2026-10-04T12:00:00Z',
+    ...overrides,
+  };
 }
