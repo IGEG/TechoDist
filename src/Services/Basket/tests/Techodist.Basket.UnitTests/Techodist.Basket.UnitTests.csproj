@@ -1,0 +1,22 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <RootNamespace>Techodist.Basket.UnitTests</RootNamespace>
+    <IsPackable>false</IsPackable>
+    <IsTestProject>true</IsTestProject>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.NET.Test.Sdk" />
+    <PackageReference Include="xunit" />
+    <PackageReference Include="xunit.runner.visualstudio" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\Techodist.Basket.Application\Techodist.Basket.Application.csproj" />
+    <ProjectReference Include="..\..\Techodist.Basket.Domain\Techodist.Basket.Domain.csproj" />
+    <ProjectReference Include="..\..\Techodist.Basket.Infrastructure\Techodist.Basket.Infrastructure.csproj" />
+    <ProjectReference Include="..\..\..\..\BuildingBlocks\Techodist.BuildingBlocks.Core\Techodist.BuildingBlocks.Core.csproj" />
+  </ItemGroup>
+
+</Project>
