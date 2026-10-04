@@ -1,0 +1,23 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <PropertyGroup>
+    <RootNamespace>Techodist.Identity.Api</RootNamespace>
+    <UserSecretsId>techodist-identity-api</UserSecretsId>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!-- Token-endpoint OpenIddict обслуживается контроллером AuthorizationController. -->
+    <PackageReference Include="OpenIddict.Server.AspNetCore" />
+    <!-- Проверка access-токенов на собственных защищённых эндпоинтах Identity API. -->
+    <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Design" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Techodist.Identity.Application\Techodist.Identity.Application.csproj" />
+    <ProjectReference Include="..\Techodist.Identity.Infrastructure\Techodist.Identity.Infrastructure.csproj" />
+    <ProjectReference Include="..\..\..\BuildingBlocks\Techodist.BuildingBlocks.Observability\Techodist.BuildingBlocks.Observability.csproj" />
+    <ProjectReference Include="..\..\..\BuildingBlocks\Techodist.BuildingBlocks.Web\Techodist.BuildingBlocks.Web.csproj" />
+  </ItemGroup>
+
+</Project>
