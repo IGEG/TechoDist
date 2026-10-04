@@ -36,6 +36,11 @@ internal sealed class ProductRepository(CatalogDbContext db) : IProductRepositor
         {
             query = query.Where(p => p.Status == ProductStatus.Published);
         }
+        else if (filter.Status is { } status)
+        {
+            // Админский отбор (черновики/архив) возможен только когда витринный фильтр не активен.
+            query = query.Where(p => p.Status == status);
+        }
 
         if (filter.CategoryId is { } categoryId)
         {

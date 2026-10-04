@@ -11,7 +11,7 @@ Techodist.Catalog.Application     CQRS (MediatR), DTO, Mapster-маппинг, F
                                 абстракции (IProductRepository, ICategoryRepository, ICacheService)
 Techodist.Catalog.Infrastructure  EF Core + PostgreSQL (миграции), репозитории, Redis-кэш, health-check
 Techodist.Catalog.Api             Minimal hosting, контроллеры, Swagger, сидирование демо-данных
-tests/Techodist.Catalog.UnitTests xUnit: value objects, PagedResult, обработчики CQRS (18 тестов)
+tests/Techodist.Catalog.UnitTests xUnit: value objects, PagedResult, обработчики CQRS (22 теста)
 ```
 
 ## Эндпоинты
@@ -20,7 +20,12 @@ tests/Techodist.Catalog.UnitTests xUnit: value objects, PagedResult, обраб�
 |-------|------|----------|
 | GET | `/api/products?categoryId=&solventType=&search=&page=1&pageSize=12&sort=price_asc` | Постраничный список (кэш 5 мин) |
 | GET | `/api/products/{id}` | Детальная карточка товара |
+| GET | `/api/products/admin?status=&search=&page=1&pageSize=20` | Админский срез: черновики, опубликованные и архив (роль `Admin`/`Manager`) |
 | POST | `/api/products` | Создание товара (для админки) |
+| PUT | `/api/products/{id}` | Изменение товара (для админки) |
+| POST | `/api/products/{id}/publish` | Публикация: карточка уходит на витрину и в индекс поиска |
+| POST | `/api/products/{id}/archive` | Снятие с продажи (архив) |
+| DELETE | `/api/products/{id}` | Удаление черновика (опубликованный сначала снимают с продажи) |
 | GET | `/api/categories?onlyPublished=true` | Список категорий |
 | POST | `/api/categories` | Создание категории |
 | GET | `/swagger` | OpenAPI UI |

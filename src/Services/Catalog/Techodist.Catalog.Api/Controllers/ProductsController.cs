@@ -5,6 +5,7 @@ using Techodist.Catalog.Application.Features.Products.Commands.CreateProduct;
 using Techodist.Catalog.Application.Features.Products.Commands.DeleteProduct;
 using Techodist.Catalog.Application.Features.Products.Commands.PublishProduct;
 using Techodist.Catalog.Application.Features.Products.Commands.UpdateProduct;
+using Techodist.Catalog.Application.Features.Products.Queries.GetAdminProducts;
 using Techodist.Catalog.Application.Features.Products.Queries.GetProductById;
 using Techodist.Catalog.Application.Features.Products.Queries.GetProducts;
 using MediatR;
@@ -35,6 +36,17 @@ public sealed class ProductsController(ISender sender) : ControllerBase
 
         return result.IsSuccess ? Ok(result.Value) : result.Error.ToProblemResult();
     }
+
+    /// <summary>
+    /// Список товаров для админ-панели: включает черновики и архив, фильтруется по статусу.
+    /// Требует access-токен администратора — витрине этот срез недоступен.
+    /// </summary>
+    [HttpGet("admin")]
+    [Authorize(Roles = AuthenticationExtensions.AdminRoles)]
+    public async Task<IActionResult> GetAdminProducts(
+        [FromQuery] GetAdminProductsQuery query,
+        CancellationToken cancellationToken)
+        => Ok(await sender.Send(query, cancellationToken));
 
     /// <summary>Создание товара (для админ-панели). Требует access-токен администратора.</summary>
     [HttpPost]

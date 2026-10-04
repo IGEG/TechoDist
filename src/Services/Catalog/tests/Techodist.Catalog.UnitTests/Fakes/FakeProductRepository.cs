@@ -1,6 +1,7 @@
 using Techodist.Catalog.Application.Abstractions;
 using Techodist.Catalog.Application.Models;
 using Techodist.Catalog.Domain.Entities;
+using Techodist.Catalog.Domain.Enums;
 
 namespace Techodist.Catalog.UnitTests.Fakes;
 
@@ -31,9 +32,29 @@ internal sealed class FakeProductRepository : IProductRepository
     {
         var query = _store.Values.AsEnumerable();
 
+        // Повторяет семантику EF-репозитория: витрина фильтрует только опубликованные,
+        // админский список — по конкретному статусу (черновик/архив).
+        if (filter.OnlyPublished)
+        {
+            query = query.Where(p => p.Status == ProductStatus.Published);
+        }
+        else if (filter.Status is { } status)
+        {
+            query = query.Where(p => p.Status == status);
+        }
+
         if (filter.CategoryId is { } categoryId)
         {
             query = query.Where(p => p.CategoryId == categoryId);
+        }
+
+        if (!string.IsNullOrWhiteSpace(filter.Search))
+        {
+            var search = filter.Search.Trim();
+
+            query = query.Where(p =>
+                p.Name.Contains(search, StringComparison.OrdinalIgnoreCase) ||
+                (p.ShortDescription?.Contains(search, StringComparison.OrdinalIgnoreCase) ?? false));
         }
 
         var all = query.OrderBy(p => p.Name).ToList();

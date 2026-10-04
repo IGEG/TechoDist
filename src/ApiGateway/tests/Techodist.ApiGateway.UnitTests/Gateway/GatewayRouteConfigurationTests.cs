@@ -65,16 +65,37 @@ public sealed class GatewayRouteConfigurationTests
         Assert.Null(catalog.AuthorizationPolicy);
         Assert.Equal($"{GatewayConstants.CatalogPathPrefix}/{{**catch-all}}", catalog.MatchPath);
 
-        foreach (var name in new[] { "catalog-admin-products", "catalog-admin-categories" })
+        // Все изменяющие операции каталога закрыты ролью: создание, правка, публикация, архив, удаление.
+        var adminWrites = new Dictionary<string, string[]>
+        {
+            ["catalog-admin-products"] = ["POST"],
+            ["catalog-admin-categories"] = ["POST"],
+            ["catalog-admin-products-item"] = ["PUT", "DELETE"],
+            ["catalog-admin-products-publish"] = ["POST"],
+            ["catalog-admin-products-archive"] = ["POST"],
+        };
+
+        foreach (var (name, methods) in adminWrites)
         {
             var route = routes[name];
 
             Assert.Equal(GatewayPolicies.Admin, route.AuthorizationPolicy);
-            Assert.Equal(["POST"], route.Methods);
+            Assert.Equal(methods, route.Methods);
 
             // Административный маршрут обязан быть точнее публичного catch-all, иначе его политика не выберется.
             Assert.True(route.Order < catalog.Order, $"У маршрута '{name}' должен быть меньший Order, чем у '{catalog}'.");
         }
+
+        // Список товаров для админки отдаёт черновики и архив: витрине он недоступен.
+        var adminList = routes["catalog-admin-products-list"];
+
+        Assert.Equal(GatewayPolicies.Admin, adminList.AuthorizationPolicy);
+        Assert.Equal(["GET"], adminList.Methods);
+        Assert.Equal($"{GatewayConstants.CatalogPathPrefix}/api/products/admin", adminList.MatchPath);
+        Assert.True(adminList.Order < catalog.Order, "Список админки должен иметь меньший Order, чем публичный catch-all.");
+
+        // Карточка товара по-прежнему читается гостями: закрыты только PUT/DELETE.
+        Assert.DoesNotContain("GET", routes["catalog-admin-products-item"].Methods);
     }
 
     [Fact]
