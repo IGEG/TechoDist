@@ -32,7 +32,7 @@ jobs:
         run: dotnet test Techodist.sln -c Release --no-build --verbosity normal
 
   frontend:
-    name: Frontend build
+    name: Frontend lint, test & build
     runs-on: ubuntu-latest
     defaults:
       run:
@@ -44,12 +44,17 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+          cache-dependency-path: src/Frontend/package-lock.json
 
       - name: Install deps
         run: npm ci
 
       - name: Lint
-        run: npm run lint --if-present
+        run: npm run lint
+
+      - name: Test
+        run: npm run test
 
       - name: Build
         run: npm run build
