@@ -46,6 +46,10 @@
     <PackageVersion Include="OpenIddict.EntityFrameworkCore" Version="6.4.0" />
     <PackageVersion Include="OpenIddict.Server.AspNetCore" Version="6.4.0" />
 
+    <!-- ===== Search: полнотекстовый поиск (ADR 0009) ===== -->
+    <!-- Версия клиента совпадает с образом сервера в docker-compose (elasticsearch:8.15.0). -->
+    <PackageVersion Include="Elastic.Clients.Elasticsearch" Version="8.15.0" />
+
     <!-- ===== API Gateway (YARP) ===== -->
     <PackageVersion Include="Yarp.ReverseProxy" Version="2.3.0" />
 

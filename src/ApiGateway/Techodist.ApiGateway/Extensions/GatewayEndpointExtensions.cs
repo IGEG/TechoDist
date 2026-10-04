@@ -25,6 +25,8 @@ public static class GatewayEndpointExtensions
                 $"{GatewayConstants.OrderPathPrefix}/api/orders/… (список/статусы для админ-панели)",
                 $"{GatewayConstants.IdentityPathPrefix}/api/… (роль Admin или Manager)",
                 $"{GatewayConstants.IdentityPathPrefix}/connect/token (выдача access/refresh-токенов)",
+                // Публичный поиск по индексу Elasticsearch: токен не нужен, как у витрины каталога (ADR 0009).
+                $"{GatewayConstants.SearchPathPrefix}/api/search/products (поиск товаров)",
             },
             health = new[] { GatewayConstants.LivePath, GatewayConstants.ReadyPath },
         })).DisableRateLimiting();

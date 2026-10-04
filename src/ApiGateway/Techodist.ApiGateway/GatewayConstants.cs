@@ -27,6 +27,9 @@ public static class GatewayConstants
     /// </summary>
     public const string OrderPathPrefix = "/order";
 
+    /// <summary>Префикс маршрута Search API (публичный поиск по товарам, ADR 0009).</summary>
+    public const string SearchPathPrefix = "/search";
+
     public const string LivePath = "/health/live";
 
     public const string ReadyPath = "/health/ready";

@@ -32,6 +32,7 @@ public sealed class GatewayRouteConfigurationTests
             GatewayConstants.IdentityPathPrefix,
             GatewayConstants.BasketPathPrefix,
             GatewayConstants.OrderPathPrefix,
+            GatewayConstants.SearchPathPrefix,
         ];
 
         foreach (var (name, route) in GatewayTestConfiguration.GetRoutes(configuration))
@@ -88,6 +89,20 @@ public sealed class GatewayRouteConfigurationTests
 
         // Гостевая корзина (ADR 0005): до оформления заявки токена нет, значит маршрут не должен требовать JWT.
         Assert.Null(basket.AuthorizationPolicy);
+    }
+
+    [Fact]
+    public void SearchRoute_IsPublicBecauseSearchIsPartOfTheStorefront()
+    {
+        var configuration = GatewayTestConfiguration.Build();
+
+        var search = GatewayTestConfiguration.GetRoutes(configuration)["search-api"];
+
+        Assert.Equal("search", search.ClusterId);
+        Assert.Equal($"{GatewayConstants.SearchPathPrefix}/{{**catch-all}}", search.MatchPath);
+
+        // Поиск — публичная витрина: покупатель ищет товар без входа в систему (ADR 0004, 0009).
+        Assert.Null(search.AuthorizationPolicy);
     }
 
     [Fact]

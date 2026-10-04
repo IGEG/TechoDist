@@ -10,6 +10,7 @@ public sealed class GatewayServiceConfigurationTests
     private const string LocalIdentityAddress = "http://localhost:5102";
     private const string LocalBasketAddress = "http://localhost:5103";
     private const string LocalOrderAddress = "http://localhost:5104";
+    private const string LocalSearchAddress = "http://localhost:5106";
 
     [Fact]
     public void DevelopmentClusters_PointToLocalServicePorts()
@@ -22,6 +23,7 @@ public sealed class GatewayServiceConfigurationTests
         Assert.Equal(LocalIdentityAddress, destinations["identity"]);
         Assert.Equal(LocalBasketAddress, destinations["basket"]);
         Assert.Equal(LocalOrderAddress, destinations["order"]);
+        Assert.Equal(LocalSearchAddress, destinations["search"]);
     }
 
     [Fact]
@@ -32,11 +34,14 @@ public sealed class GatewayServiceConfigurationTests
         var services = GatewayTestConfiguration.GetHealthServices(configuration);
 
         Assert.Equal(
-            new[] { LocalCatalogAddress, LocalIdentityAddress, LocalBasketAddress, LocalOrderAddress },
+            new[]
+            {
+                LocalCatalogAddress, LocalIdentityAddress, LocalBasketAddress, LocalOrderAddress, LocalSearchAddress,
+            },
             services.Select(service => service.Url).Order(StringComparer.Ordinal).ToArray());
 
         Assert.Equal(
-            new[] { "basket-api", "catalog-api", "identity-api", "order-api" },
+            new[] { "basket-api", "catalog-api", "identity-api", "order-api", "search-api" },
             services.Select(service => service.Name).Order(StringComparer.Ordinal).ToArray());
     }
 

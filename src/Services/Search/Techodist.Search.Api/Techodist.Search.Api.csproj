@@ -1,0 +1,15 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <PropertyGroup>
+    <RootNamespace>Techodist.Search.Api</RootNamespace>
+    <UserSecretsId>techodist-search-api</UserSecretsId>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Techodist.Search.Application\Techodist.Search.Application.csproj" />
+    <ProjectReference Include="..\Techodist.Search.Infrastructure\Techodist.Search.Infrastructure.csproj" />
+    <ProjectReference Include="..\..\..\BuildingBlocks\Techodist.BuildingBlocks.Observability\Techodist.BuildingBlocks.Observability.csproj" />
+    <ProjectReference Include="..\..\..\BuildingBlocks\Techodist.BuildingBlocks.Web\Techodist.BuildingBlocks.Web.csproj" />
+  </ItemGroup>
+
+</Project>
