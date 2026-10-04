@@ -1,0 +1,35 @@
+@import 'tailwindcss';
+
+/* Дизайн-токены Techodist: графит (металл/техника) + янтарный акцент (растворители).
+   Tailwind v4 читает токены прямо из @theme — отдельный tailwind.config.js не нужен. */
+@theme {
+  --color-graphite-50: #f5f6f8;
+  --color-graphite-100: #e7e9ee;
+  --color-graphite-200: #ced3dd;
+  --color-graphite-300: #a8b0bf;
+  --color-graphite-400: #7c869a;
+  --color-graphite-500: #5b6579;
+  --color-graphite-600: #454e60;
+  --color-graphite-700: #333a49;
+  --color-graphite-800: #232833;
+  --color-graphite-900: #171a22;
+  --color-accent-300: #f8cd7a;
+  --color-accent-400: #f5b544;
+  --color-accent-500: #e79c1f;
+  --color-accent-600: #c47f10;
+}
+
+@layer base {
+  body {
+    background-color: var(--color-graphite-50);
+    color: var(--color-graphite-900);
+    font-family: 'Inter', system-ui, -apple-system, 'Segoe UI', sans-serif;
+    -webkit-font-smoothing: antialiased;
+    margin: 0;
+  }
+
+  a {
+    color: inherit;
+    text-decoration: none;
+  }
+}

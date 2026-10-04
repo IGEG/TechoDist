@@ -1,0 +1,16 @@
+# ===== Зависимости и сборка =====
+node_modules/
+dist/
+dist-ssr/
+.vite/
+coverage/
+*.tsbuildinfo
+
+# ===== Локальное окружение (секреты не коммитим) =====
+.env
+.env.*
+!.env.example
+
+# ===== Логи и кэш линтера =====
+*.log
+.eslintcache
