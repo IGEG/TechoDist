@@ -1,0 +1,31 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <RootNamespace>Techodist.ApiGateway.UnitTests</RootNamespace>
+    <IsPackable>false</IsPackable>
+    <IsTestProject>true</IsTestProject>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.NET.Test.Sdk" />
+    <PackageReference Include="xunit" />
+    <PackageReference Include="xunit.runner.visualstudio" />
+    <PackageReference Include="Microsoft.Extensions.Configuration.Json" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <FrameworkReference Include="Microsoft.AspNetCore.App" />
+  </ItemGroup>
+
+  <!-- Конфигурация шлюза копируется в выход тестов: тесты проверяют инварианты
+       реальных маршрутов YARP, а не дубликата в тестовом проекте. -->
+  <ItemGroup>
+    <Content Include="..\..\Techodist.ApiGateway\appsettings.json" Link="gateway\appsettings.json" CopyToOutputDirectory="PreserveNewest" />
+    <Content Include="..\..\Techodist.ApiGateway\appsettings.Development.json" Link="gateway\appsettings.Development.json" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\Techodist.ApiGateway\Techodist.ApiGateway.csproj" />
+  </ItemGroup>
+
+</Project>
