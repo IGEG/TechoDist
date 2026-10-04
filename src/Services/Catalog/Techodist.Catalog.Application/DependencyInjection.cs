@@ -26,6 +26,9 @@ public static class DependencyInjection
 
         services.AddValidatorsFromAssembly(assembly, includeInternalTypes: true);
 
+        // Сброс кэша списков каталога после изменения товара: команды вызывают его после коммита.
+        services.AddScoped<CatalogCacheInvalidator>();
+
         return services;
     }
 }

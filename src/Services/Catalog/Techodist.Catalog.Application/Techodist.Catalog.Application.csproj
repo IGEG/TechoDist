@@ -10,12 +10,16 @@
     <PackageReference Include="FluentValidation" />
     <PackageReference Include="FluentValidation.DependencyInjectionExtensions" />
     <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" />
+    <!-- Публикация события об изменении товара из обработчика идёт через IPublishEndpoint
+         (MassTransit + transactional outbox сервиса Catalog). -->
+    <PackageReference Include="MassTransit" />
   </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\Techodist.Catalog.Domain\Techodist.Catalog.Domain.csproj" />
     <ProjectReference Include="..\..\..\BuildingBlocks\Techodist.BuildingBlocks.Application\Techodist.BuildingBlocks.Application.csproj" />
     <ProjectReference Include="..\..\..\BuildingBlocks\Techodist.BuildingBlocks.Core\Techodist.BuildingBlocks.Core.csproj" />
+    <ProjectReference Include="..\..\..\BuildingBlocks\Techodist.BuildingBlocks.Messaging\Techodist.BuildingBlocks.Messaging.csproj" />
   </ItemGroup>
 
   <ItemGroup>

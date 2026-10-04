@@ -13,11 +13,15 @@
     <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" />
     <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" />
     <PackageReference Include="Microsoft.Extensions.Diagnostics.HealthChecks.EntityFrameworkCore" />
+    <!-- Transactional outbox MassTransit: события об изменении товара пишутся в таблицы
+         outbox/inbox той же БД и той же транзакцией, что и сам товар (ADR 0003). -->
+    <PackageReference Include="MassTransit.EntityFrameworkCore" />
   </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\Techodist.Catalog.Application\Techodist.Catalog.Application.csproj" />
     <ProjectReference Include="..\Techodist.Catalog.Domain\Techodist.Catalog.Domain.csproj" />
+    <ProjectReference Include="..\..\..\BuildingBlocks\Techodist.BuildingBlocks.Messaging\Techodist.BuildingBlocks.Messaging.csproj" />
   </ItemGroup>
 
 </Project>

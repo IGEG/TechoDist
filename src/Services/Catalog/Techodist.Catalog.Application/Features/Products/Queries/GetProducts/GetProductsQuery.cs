@@ -1,5 +1,6 @@
 using Techodist.BuildingBlocks.Core.Pagination;
 using Techodist.Catalog.Application.Abstractions;
+using Techodist.Catalog.Application.Common;
 using Techodist.Catalog.Application.Dtos;
 using Techodist.Catalog.Application.Models;
 using Mapster;
@@ -35,7 +36,9 @@ internal sealed class GetProductsQueryHandler(
             request.PageSize,
             request.Sort);
 
-        var cacheKey = $"catalog:products:{filter.CategoryId}:{filter.SolventType}:{filter.Search}:{filter.NormalizedPage}:{filter.NormalizedPageSize}:{filter.Sort}";
+        // Версия каталога в ключе: изменение товара в админке делает старые страницы недостижимыми.
+        var version = await cache.GetAsync<long?>(CatalogCacheKeys.ProductListVersion, cancellationToken) ?? 0;
+        var cacheKey = CatalogCacheKeys.ProductList(filter, version);
 
         return await cache.GetOrSetAsync(
             cacheKey,
