@@ -18,12 +18,12 @@ docker compose -f deploy/docker-compose/docker-compose.infrastructure.yml up -d
 |--------|-------|---------|------------|
 | catalog-db | postgres:16-alpine | **5433** | БД Catalog (БД `techodist_catalog`) |
 | identity-db | postgres:16-alpine | **5434** | БД Identity (БД `techodist_identity`) |
-| order-db | postgres:16-alpine | **5435** | БД Order (БД `techodist_order`) |
+| order-db | postgres:16-alpine | **5435** | БД Order (БД `techodist_order`, включая таблицы outbox) |
 | redis | redis:7-alpine | **6379** | Кэш каталога + корзина |
-| rabbitmq | rabbitmq:3.13-management-alpine | **5672**, **15672** | Брокер + Management UI |
+| rabbitmq | rabbitmq:3.13-management-alpine | **5672**, **15672** | Брокер + Management UI (события заявок Order → Notification) |
 | elasticsearch | elasticsearch:8.15.0 | **9200** | Поиск товаров (и опц. логи) |
 | kibana | kibana:8.15.0 | **5601** | UI для Elasticsearch |
-| mailhog | mailhog/mailhog | **1025**, **8025** | SMTP-ловушка + веб-UI писем |
+| mailhog | mailhog/mailhog | **1025**, **8025** | SMTP-ловушка + веб-UI писем (уведомления по заявкам) |
 
 ## Полезные адреса
 
@@ -32,13 +32,22 @@ docker compose -f deploy/docker-compose/docker-compose.infrastructure.yml up -d
 - Elasticsearch — http://localhost:9200
 - MailHog UI (письма заявок на почту) — http://localhost:8025
 
+Минимальный набор под сервисы заявок (Фаза 6):
+
+```powershell
+docker compose -f deploy/docker-compose/docker-compose.infrastructure.yml up -d order-db rabbitmq mailhog
+```
+
+Order нужны `order-db` и `rabbitmq`, Notification — `rabbitmq` и `mailhog`; Basket берёт позиции
+заявки из `redis` (и обращается к Catalog).
+
 ## Строки подключения (для `appsettings.Development.json` сервисов)
 
 ```
 Catalog:    Host=localhost;Port=5433;Database=techodist_catalog;Username=techodist;Password=techodist_dev_pwd
 Identity:   Host=localhost;Port=5434;Database=techodist_identity;Username=techodist;Password=techodist_dev_pwd
 Order:      Host=localhost;Port=5435;Database=techodist_order;Username=techodist;Password=techodist_dev_pwd
-Redis:      localhost:6379
+Redis:      localhost:6379 (Catalog — кэш; Basket — корзины `basket:{basketId}`, TTL 30 дней)
 RabbitMQ:   amqp://techodist:techodist_dev_pwd@localhost:5672
 SMTP:       localhost:1025 (MailHog, без TLS/аутентификации)
 ```

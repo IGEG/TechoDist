@@ -18,6 +18,22 @@
   кэшируются в позиции как снимок на момент добавления.
 - При оформлении `basketId` фиксируется в заявке (Order), связывая корзину и заказ.
 
+## Уточнения реализации (Фаза 5)
+
+- Транспорт до Catalog — **REST**, а не gRPC: `GET api/products/{id}` (`CatalogProductClient`).
+  gRPC ради одного вызова не стоит отдельного контракта и кодогенерации.
+- Идентификатор: cookie `techodist_basket` (HttpOnly, `SameSite=Lax`, `IsEssential`,
+  `Path=/`, `MaxAge` = TTL; `Secure` — по схеме запроса, иначе на dev-http браузер
+  cookie не сохранит). `basketId` рождается только в `BasketIdProvider`, мусор в cookie = новая корзина.
+- Хранение: ключ `basket:{basketId}`, значение — JSON state-моделей (`BasketState`,
+  `BasketItemState`), а не сериализованный агрегат: приватные сеттеры домена не диктуют
+  формат, а побитые данные чинятся при чтении. TTL ~30 дней (`Basket:Storage:TtlDays`).
+- Лимиты: 50 различных товаров (иначе `basket.items.limit_reached`, 409), 99 единиц позиции.
+- Шлюз: маршрут `/basket/{**catch-all}` → кластер `basket` (`http://localhost:5103`),
+  **без** `AuthorizationPolicy` — корзина гостя, аутентификации нет.
+- CORS шлюза с `AllowCredentials` + `withCredentials: true` в axios-клиенте SPA —
+  без этого браузер не отправит HttpOnly-cookie на кросс-origin запрос.
+
 ## Последствия
 
 - (+) Быстрое чтение/запись, естественный TTL, независимость от устройств браузера.

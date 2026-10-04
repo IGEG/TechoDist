@@ -4,6 +4,10 @@
 
 - **[architecture.md](architecture.md)** — полное описание архитектуры системы.
 - **[adr/](adr/)** — реестр архитектурных решений (Architecture Decision Records).
+- Описания сервисов: [Catalog](../src/Services/Catalog/README.md),
+  [Basket](../src/Services/Basket/README.md), [Order](../src/Services/Order/README.md),
+  [Notification](../src/Services/Notification/README.md),
+  [docker-compose (инфраструктура)](../deploy/docker-compose/README.md).
 
 ## Быстрая навигация по решениям (ADR)
 

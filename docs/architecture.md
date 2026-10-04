@@ -22,8 +22,8 @@
 | **Identity** | Аутентификация админов/менеджеров (OpenIddict), роли, JWT | PostgreSQL |
 | **Catalog** | Товары, категории, марки растворителей, характеристики, цены | PostgreSQL + Redis (кэш) |
 | **Basket** | Гостевая корзина (анонимный `basketId`) | Redis |
-| **Order** | Оформление заявки, статусы, outbox | PostgreSQL |
-| **Notification** | Отправка писем (заявка магазину + подтверждение клиенту) | — |
+| **Order** | Оформление заявки (номер `TD-…`), воронка статусов, outbox | PostgreSQL |
+| **Notification** | Письма: заявка магазину, подтверждение и смена статуса клиенту | — |
 | **Search** | Полнотекстовый поиск по товарам | Elasticsearch |
 
 ## 3. Слои сервиса (Clean Architecture)
@@ -49,12 +49,107 @@ tests/Service.*.Tests    -> Unit + Integration (Testcontainers)
       -> Админка: менеджер меняет статусы -> уведомления клиенту
 ```
 
+- Гостевой вход защищён двумя механизмами: honeypot на витрине и rate-limit шлюза
+  (`order-submit`). Заявку создаёт только `POST /order/api/orders`, статус читается по номеру
+  из письма (`GET /order/api/orders/number/{number}`) — токен для этого не нужен.
+- Заявка и событие коммитятся вместе (outbox), а письма отправляет Notification по событию:
+  «заявка без письма» возможна только при недоступном SMTP — брокер повторит доставку.
+- Подробности — в разделе [4.6](#46-заявки-и-уведомления-adr-0003).
+
 ### 4.2 Синхронизация поиска
 
 ```
 Catalog -> доменные события (товар создан/изменён/удалён)
         -> RabbitMQ -> Search: обновление индекса Elasticsearch
 ```
+
+### 4.3 Аутентификация админ-панели (ADR 0004)
+
+```
+Админ-панель -> POST Identity /connect/token
+               (grant_type=password, client_id=techodist-admin-panel, scope=...-api)
+             -> access-токен (JWT, 15 мин, aud = аудитория нужного сервиса) + refresh-токен (14 дней)
+             -> защищённые эндпоинты: сервис/Gateway проверяют подпись, issuer, audience и роль
+             -> POST /connect/token (grant_type=refresh_token) — обновление без повторного логина
+```
+
+Покупатели не аутентифицируются: витрина каталога публичная, оформление заявки — гостевое
+(ADR 0005). Требуют роль `Admin`/`Manager` только административные операции (управление
+пользователями в Identity, создание/изменение товаров и категорий в Catalog).
+
+### 4.4 Фронтенд (SPA) и шлюз
+
+```
+Браузер (SPA, http://localhost:5173)
+  -> API Gateway (http://localhost:5100) — единственный адрес в VITE_API_BASE_URL
+     /catalog/api/**         -> Catalog (префикс снимается трансформом)
+     /identity/connect/token -> Identity (grant_type=password | refresh_token)
+     /identity/api/**        -> Identity (AuthorizationPolicy techodist-admin-only)
+     /basket/api/**          -> Basket (без авторизации: корзина гостя по HttpOnly-cookie)
+     /order/api/orders          -> Order, POST (гостевая заявка, rate-limit `order-submit`)
+     /order/api/orders/number/* -> Order, GET (статус заявки по номеру из письма, без токена)
+     /order/api/orders/...      -> Order, остальные методы (AuthorizationPolicy techodist-admin)
+  -> 401 от любого сервиса: store сбрасывает токены, guard уводит на /admin/login
+```
+
+- Маршруты витрины: `/catalog` (поиск, фильтры, сортировка, пагинация), `/catalog/:productId`,
+  `/admin/login`, `/admin` (роли `Admin`/`Manager`).
+- Состояние фильтров каталога живёт в query-string, ключи TanStack Query выводятся из тех же
+  параметров: кэш переиспользуется, ссылкой на выдачу можно делиться.
+- Публичные страницы загружаются сразу, админ-разделы — ленивыми чанками под `RequireAuth`.
+- CORS шлюза разрешает origin фронтенда (`Cors:AllowedOrigins`); префикс сервиса в пути
+  добавляет сам фронтенд — шлюз его снимает перед проксированием.
+
+### 4.5 Корзина гостя (ADR 0005)
+
+```
+Витрина -> Gateway /basket/api/** -> Basket API (без JWT: покупатель не логинится)
+             basketId — анонимный GUID; рождается в Basket, уходит гостю HttpOnly-cookie
+             (SameSite=Lax, Secure по схеме; JS идентификатор не читает)
+          -> Redis: один ключ basket:{basketId} = JSON-состояние корзины, TTL 30 дней
+          -> добавление товара: синхронный GET Catalog api/products/{id}
+             -> в позиции сохраняется снимок { name, imageUrl, unitPrice }; цена обновляется
+                при повторном добавлении, количество прибавляется
+```
+
+- Шлюз публикует **гостевой** маршрут: `AuthorizationPolicy` нет, иначе гость не смог бы
+  набрать корзину до входа (покупатели не аутентифицируются).
+- Cookie — `HttpOnly` и `SameSite=Lax`, а CORS шлюза разрешает `AllowCredentials`:
+  фронтенд обращается к API с `withCredentials: true`, иначе браузер cookie не отправит.
+- В Redis пишется **отдельная state-модель**, а не агрегат: формат хранения не зависит от
+  инкапсуляции домена, а повреждённые данные чинятся при чтении (количество ограничивается
+  лимитом позиции). Удаление последней позиции удаляет ключ — пустых корзин не бывает.
+- Лимиты: до 50 различных товаров в корзине, до 99 единиц одной позиции.
+- При оформлении заявки [4.6](#46-заявки-и-уведомления-adr-0003) `basketId` фиксируется в заказе —
+  так корзина связывается с заявкой. Детали сервиса — [src/Services/Basket/README.md](../src/Services/Basket/README.md).
+
+### 4.6 Заявки и уведомления (ADR 0003)
+
+```
+Витрина -> Gateway POST /order/api/orders (rate-limit `order-submit`)
+             -> Order: basketId из HttpOnly-cookie -> GET Basket api/basket (состав заявки)
+                       -> номер TD-ГГГГММДД-00042 (последовательность PostgreSQL)
+                       -> заявка + событие OrderSubmitted в outbox — одной транзакцией
+             -> RabbitMQ -> Notification (OrderSubmittedConsumer)
+                       -> дедупликация по MessageId -> SMTP (MailKit):
+                          письмо магазину + подтверждение клиенту
+Админка -> Gateway PUT /order/api/orders/{id}/status (роль Admin/Manager)
+             -> Order: агрегат проверяет переход -> событие OrderStatusChanged (outbox)
+             -> Notification (OrderStatusChangedConsumer): письмо клиенту о новом статусе
+```
+
+- Онлайн-оплаты нет: `Pending -> Confirmed -> InProgress -> Completed` (или `Cancelled` на любом
+  шаге до терминального статуса) — это работа менеджера с обращением клиента, а не жизненный
+  цикл платежа. Повторная установка того же статуса — ошибка: иначе клиент получил бы дубль письма.
+- Событие несёт **снимок** заявки (позиции, суммы, контакты, статусы, время), поэтому Notification
+  не обращается к Order за данными — обмен только через брокер (ADR 0002).
+- У Notification нет своей БД: журнал дедупликации in-memory (retention 24 ч, capacity 10 000),
+  а outbox не нужен, так как сервис не пишет в базу. Отметка ставится **после** успешной отправки:
+  повторная доставка не дублирует письма, а упавшая отправка не теряется (MassTransit повторит).
+- Контракты событий живут в `BuildingBlocks.Messaging.IntegrationEvents` — их используют и
+  издатель (Order), и потребитель (Notification), поэтому схема не расходится между сервисами.
+- Детали сервисов — [Order](../src/Services/Order/README.md),
+  [Notification](../src/Services/Notification/README.md).
 
 ## 5. Наблюдаемость
 
@@ -77,6 +172,8 @@ Catalog -> доменные события (товар создан/изменё
 ## 7. Безопасность
 
 - OpenIddict + JWT (access/refresh), роли `Admin` (и при необходимости `Manager`).
+  В Dev подпись — HS256 ключом из конфигурации (User-Secrets), в прод-контуре — RSA-сертификат
+  и JWKS-endpoint; access-токен короткий (15 мин), refresh — одноразовый (14 дней).
 - HTTPS через cert-manager. Rate-limiting публичных форм на Gateway.
 - Валидация входа (FluentValidation), единый формат ошибок (ProblemDetails).
 - Секреты — через K8s Secrets / user-secrets / `.env` (не в git).
