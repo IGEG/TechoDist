@@ -10,7 +10,7 @@ builder.AddEcoTechObservability("catalog-api");
 
 builder.Services.AddCatalogApplication();
 builder.Services.AddCatalogInfrastructure(builder.Configuration);
-builder.Services.AddEcoTechWebApi(builder.Configuration, "EcoTech · Catalog API");
+builder.Services.AddEcoTechWebApi(builder.Configuration, "Techodist · Catalog API");
 
 var app = builder.Build();
 

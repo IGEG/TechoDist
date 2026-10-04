@@ -8,9 +8,17 @@ public sealed class SlugTests
     [Fact]
     public void FromName_TransliteratesCyrillic_AndBuildsSlug()
     {
-        var slug = Slug.FromName("Установка ЭКОТЕХ ET-60");
+        var slug = Slug.FromName("Установка регенерации TD60");
 
-        Assert.Equal("ustanovka-ekoteh-et-60", slug.Value);
+        Assert.Equal("ustanovka-regeneratsii-td60", slug.Value);
+    }
+
+    [Fact]
+    public void FromName_MixedBrandAndModel_ProducesSeoFriendlySlug()
+    {
+        var slug = Slug.FromName("Установка регенерации растворителей Techodist TD20");
+
+        Assert.Equal("ustanovka-regeneratsii-rastvoriteley-techodist-td20", slug.Value);
     }
 
     [Fact]
@@ -42,8 +50,8 @@ public sealed class SlugTests
     [Fact]
     public void Equals_ComparesByValue()
     {
-        var left = Slug.Create("et-60");
-        var right = Slug.FromName("ET-60");
+        var left = Slug.Create("td60");
+        var right = Slug.FromName("TD60");
 
         Assert.Equal(left, right);
         Assert.True(left == right);

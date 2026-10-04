@@ -56,7 +56,24 @@ Design-time фабрика (`CatalogDbContextFactory`) позволяет соз
 dotnet test src/Services/Catalog/tests/EcoTech.Catalog.UnitTests
 ```
 
-## Данные
+## Модельный ряд (демо-данные)
 
-При первом запуске сидируются 3 категории и 4 товара (установки регенерации растворителей),
-метод `CatalogDataSeeder.SeedAsync`.
+При первом запуске `CatalogDataSeeder.SeedAsync` сидирует 3 категории и 5 товаров.
+Торговая марка оборудования — **Techodist**, сокращённо **TD**; номер модели соответствует объёму бака:
+
+| Модель | Объём | Категория | Цена, ₽ |
+|--------|-------|-----------|---------|
+| Techodist TD20 | 20 л | Стандартные дистилляторы | 320 000 |
+| Techodist TD60 | 60 л | Стандартные дистилляторы | 485 000 |
+| Techodist TD120 | 120 л | Стандартные дистилляторы | 720 000 |
+| Techodist TDV40 | 40 л | Вакуумные установки | 560 000 |
+| Techodist TD-P40 | — | Комплектующие | 38 000 |
+
+Каждый товар получает характеристику «Модель» (по ней позже будет работать фильтр и поиск)
+и главное изображение. Константа с названием марки — `CatalogDataSeeder.Brand`.
+
+Пересидировать каталог после правки демо-данных:
+
+```powershell
+docker exec ecotech-catalog-db psql -U ecotech -d ecotech_catalog -c 'TRUNCATE "Products","ProductImages","ProductSpecifications","Categories" CASCADE;'
+```

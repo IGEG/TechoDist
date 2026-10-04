@@ -31,7 +31,7 @@ public sealed class GetProductByIdQueryHandlerTests
     public async Task Handle_ExistingProduct_ReturnsMappedDetails()
     {
         var product = Product.Create(
-            "ЭКОТЕХ ET-60",
+            "Установка регенерации растворителей Techodist TD60",
             Guid.NewGuid(),
             Money.Rub(485_000m),
             "Кратко",
@@ -39,7 +39,7 @@ public sealed class GetProductByIdQueryHandlerTests
             "Универсальный",
             60);
         product.Publish();
-        product.AddImage("/images/et60.jpg", "ET-60", isMain: true);
+        product.AddImage("/images/techodist-td60.jpg", "Techodist TD60", isMain: true);
 
         var repository = new FakeProductRepository();
         repository.Seed(product);
@@ -49,7 +49,7 @@ public sealed class GetProductByIdQueryHandlerTests
         var result = await handler.Handle(new GetProductByIdQuery(product.Id), CancellationToken.None);
 
         Assert.True(result.IsSuccess);
-        Assert.Equal("ekoteh-et-60", result.Value.Slug);
+        Assert.Equal("ustanovka-regeneratsii-rastvoriteley-techodist-td60", result.Value.Slug);
         Assert.Equal(485_000m, result.Value.Price);
         Assert.Equal("RUB", result.Value.Currency);
         Assert.Equal("Published", result.Value.Status);

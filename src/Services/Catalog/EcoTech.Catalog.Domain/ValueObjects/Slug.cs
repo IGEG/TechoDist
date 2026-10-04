@@ -5,8 +5,8 @@ using EcoTech.BuildingBlocks.Core.Entities;
 namespace EcoTech.Catalog.Domain.ValueObjects;
 
 /// <summary>
-/// Человекочитаемый URL-идентификатор (например, "ustanovka-ecotech-et-60-as").
-/// Поддерживает транслитерацию кириллицы в латиницу для SEB-адресов.
+/// Человекочитаемый URL-идентификатор (например, "ustanovka-techodist-td60").
+/// Поддерживает транслитерацию кириллицы в латиницу для SEO-адресов.
 /// </summary>
 public sealed class Slug : ValueObject
 {

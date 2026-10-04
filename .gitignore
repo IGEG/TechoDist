@@ -44,3 +44,8 @@ desktop.ini
 
 # ===== Docker / K8s =====
 deploy/**/secrets.yaml
+
+# ===== Локальные логи =====
+*.log
+logs/
+

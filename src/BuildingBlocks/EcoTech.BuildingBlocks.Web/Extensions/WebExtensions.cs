@@ -33,7 +33,7 @@ public static class WebExtensions
             {
                 Title = apiTitle,
                 Version = "v1",
-                Description = "EcoTech — интернет-магазин оборудования для регенерации растворителей",
+                Description = "Techodist — интернет-магазин оборудования для регенерации растворителей",
             });
         });
 
