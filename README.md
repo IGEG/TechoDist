@@ -69,12 +69,13 @@ dotnet run --project src/Services/Identity/Techodist.Identity.Api           # ht
 dotnet run --project src/Services/Basket/Techodist.Basket.Api               # http://localhost:5103
 dotnet run --project src/Services/Order/Techodist.Order.Api                 # http://localhost:5104
 dotnet run --project src/Services/Notification/Techodist.Notification.Api   # http://localhost:5105
+dotnet run --project src/Services/Search/Techodist.Search.Api               # http://localhost:5106
 dotnet run --project src/ApiGateway/Techodist.ApiGateway                    # http://localhost:5100 — единая точка входа (YARP)
 ```
 
 Фронтенд и внешние клиенты ходят только через шлюз: он публикует маршруты
-`/catalog/...`, `/identity/...`, `/basket/...` и `/order/...` и снимает префикс сервиса перед
-проксированием (см. `ReverseProxy` в `src/ApiGateway/Techodist.ApiGateway/appsettings.json`).
+`/catalog/...`, `/identity/...`, `/basket/...`, `/order/...` и `/search/...` и снимает префикс
+сервиса перед проксированием (см. `ReverseProxy` в `src/ApiGateway/Techodist.ApiGateway/appsettings.json`).
 Basket дополнительно требует запущенного Redis (`localhost:6379`) и доступного Catalog —
 снимок цены и названия берётся синхронно (см. [src/Services/Basket/README.md](src/Services/Basket/README.md)).
 Order требует запущенного Basket (позиции заявки) и RabbitMQ (события через outbox), а
@@ -141,7 +142,7 @@ npm run build   # tsc -b + vite build
 - [x] Фаза 4 — API Gateway (YARP): проксирование Catalog/Identity, JWT-авторизация админских маршрутов, rate-limit, CORS, агрегация health (15 unit-тестов) + фронтенд: публичный каталог с фильтрами/пагинацией, карточка товара, вход в админ-панель и её каркас (40 vitest-тестов)
 - [x] Фаза 5 — Basket Service (гостевая корзина в Redis: анонимный HttpOnly-cookie `basketId`, CQRS-сценарии корзины, снимок товара из Catalog, health-check Redis; 66 unit-тестов Basket + 2 unit-теста маршрута `basket-api` в шлюзе + 4 vitest-теста фронтенда на cookie корзины)
 - [x] Фаза 6 — Order + Notification + RabbitMQ (заявка из гостевой корзины: номер `TD-ГГГГММДД-00042`, воронка статусов `Pending → Confirmed → InProgress → Completed/Cancelled`, transactional outbox и события `OrderSubmitted`/`OrderStatusChanged`, письма магазину и клиенту в Notification с дедупликацией по `MessageId`; 111 unit-тестов Order + 36 unit-тестов Notification + 18 unit-тестов шлюза (включая разбор гостевых и админских маршрутов `order-api`))
-- [ ] Фаза 7 — Search Service (Elasticsearch)
+- [x] Фаза 7 — Search Service (Elasticsearch): индекс товаров как проекция каталога (явный маппинг, анализатор `russian`, `name.keyword` для tie-break), наполнение событием `ProductChanged` из outbox каталога и реконсиляцией по расписанию, публичный поиск `GET /search/api/search/products` через шлюз с фильтрами/сортировкой/пагинацией; 20 unit-тестов Search + 19 unit-тестов шлюза (маршрут `search-api` и агрегация health)
 - [ ] Фаза 8 — Полный фронтенд (админ-CRUD каталога, корзина и оформление заявки)
 - [ ] Фаза 9 — Наблюдаемость
 - [ ] Фаза 10 — Kubernetes (k3s)

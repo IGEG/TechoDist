@@ -21,7 +21,7 @@ docker compose -f deploy/docker-compose/docker-compose.infrastructure.yml up -d
 | order-db | postgres:16-alpine | **5435** | БД Order (БД `techodist_order`, включая таблицы outbox) |
 | redis | redis:7-alpine | **6379** | Кэш каталога + корзина |
 | rabbitmq | rabbitmq:3.13-management-alpine | **5672**, **15672** | Брокер + Management UI (события заявок Order → Notification) |
-| elasticsearch | elasticsearch:8.15.0 | **9200** | Поиск товаров (и опц. логи) |
+| elasticsearch | elasticsearch:8.15.0 | **9200** | Поиск товаров (индекс `techodist-products`) |
 | kibana | kibana:8.15.0 | **5601** | UI для Elasticsearch |
 | mailhog | mailhog/mailhog | **1025**, **8025** | SMTP-ловушка + веб-UI писем (уведомления по заявкам) |
 
@@ -41,6 +41,16 @@ docker compose -f deploy/docker-compose/docker-compose.infrastructure.yml up -d 
 Order нужны `order-db` и `rabbitmq`, Notification — `rabbitmq` и `mailhog`; Basket берёт позиции
 заявки из `redis` (и обращается к Catalog).
 
+Минимальный набор под поиск (Фаза 7):
+
+```powershell
+docker compose -f deploy/docker-compose/docker-compose.infrastructure.yml up -d elasticsearch rabbitmq
+```
+
+Search наполняет индекс `techodist-products` в `elasticsearch` событиями `ProductChanged` из
+`rabbitmq` и сверкой с публичным Catalog API; Kibana (`:5601`) нужна только для ручной
+проверки документов.
+
 ## Строки подключения (для `appsettings.Development.json` сервисов)
 
 ```
@@ -50,6 +60,7 @@ Order:      Host=localhost;Port=5435;Database=techodist_order;Username=techodist
 Redis:      localhost:6379 (Catalog — кэш; Basket — корзины `basket:{basketId}`, TTL 30 дней)
 RabbitMQ:   amqp://techodist:techodist_dev_pwd@localhost:5672
 SMTP:       localhost:1025 (MailHog, без TLS/аутентификации)
+Search:     http://localhost:9200 (Elasticsearch, индекс techodist-products; X-Pack Security выключен)
 ```
 
 > **Замечание.** Elasticsearch доступен в контейнере на `http://localhost:9200`.

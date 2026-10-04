@@ -13,3 +13,4 @@
 | [0006](0006-frontend-react-vite-tailwind.md) | Frontend: React + TS + Vite + Tailwind/shadcn | Accepted |
 | [0007](0007-yarp-api-gateway.md) | YARP как API Gateway | Accepted |
 | [0008](0008-observability-otel-stack.md) | Наблюдаемость: OpenTelemetry + Grafana stack | Accepted |
+| [0009](0009-search-service-elasticsearch.md) | Search Service: Elasticsearch как индекс каталога | Accepted |
