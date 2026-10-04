@@ -42,6 +42,22 @@ public static class WebExtensions
         services.AddExceptionHandler<GlobalExceptionHandler>();
         services.AddHealthChecks();
 
+        services.AddTechodistCors(configuration);
+
+        return services;
+    }
+
+    /// <summary>
+    /// Единая политика CORS <see cref="CorsPolicyName"/> по списку <c>Cors:AllowedOrigins</c>.
+    /// Вынесена отдельно: её использует и Web API, и API Gateway (без MVC-части).
+    /// </summary>
+    public static IServiceCollection AddTechodistCors(
+        this IServiceCollection services,
+        IConfiguration configuration)
+    {
+        ArgumentNullException.ThrowIfNull(services);
+        ArgumentNullException.ThrowIfNull(configuration);
+
         var allowedOrigins = configuration.GetSection("Cors:AllowedOrigins").Get<string[]>() ?? [];
 
         services.AddCors(options => options.AddPolicy(CorsPolicyName, policy =>
