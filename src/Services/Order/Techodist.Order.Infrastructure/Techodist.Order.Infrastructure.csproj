@@ -1,0 +1,37 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <RootNamespace>Techodist.Order.Infrastructure</RootNamespace>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.EntityFrameworkCore" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Design" />
+    <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" />
+    <PackageReference Include="Microsoft.Extensions.Http" />
+    <PackageReference Include="Microsoft.Extensions.Configuration.Abstractions" />
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" />
+    <PackageReference Include="Microsoft.Extensions.Options.ConfigurationExtensions" />
+    <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" />
+    <PackageReference Include="Microsoft.Extensions.Diagnostics.HealthChecks.EntityFrameworkCore" />
+    <!-- Transactional outbox MassTransit: сообщения пишутся в таблицы outbox/inbox той же БД (ADR 0003). -->
+    <PackageReference Include="MassTransit.EntityFrameworkCore" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Techodist.Order.Application\Techodist.Order.Application.csproj" />
+    <ProjectReference Include="..\Techodist.Order.Domain\Techodist.Order.Domain.csproj" />
+    <ProjectReference Include="..\..\..\BuildingBlocks\Techodist.BuildingBlocks.Messaging\Techodist.BuildingBlocks.Messaging.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="Techodist.Order.UnitTests" />
+  </ItemGroup>
+
+  <!-- Сущность заявки называется Order, а её корневое пространство имён — Techodist.Order:
+       объявление namespace перекрыло бы тип, поэтому тип доступен под псевдонимом. -->
+  <ItemGroup>
+    <Using Include="Techodist.Order.Domain.Entities.Order" Alias="OrderAggregate" />
+  </ItemGroup>
+
+</Project>

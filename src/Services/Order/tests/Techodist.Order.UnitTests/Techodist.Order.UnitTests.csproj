@@ -1,0 +1,28 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <RootNamespace>Techodist.Order.UnitTests</RootNamespace>
+    <IsPackable>false</IsPackable>
+    <IsTestProject>true</IsTestProject>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.NET.Test.Sdk" />
+    <PackageReference Include="xunit" />
+    <PackageReference Include="xunit.runner.visualstudio" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\Techodist.Order.Application\Techodist.Order.Application.csproj" />
+    <ProjectReference Include="..\..\Techodist.Order.Domain\Techodist.Order.Domain.csproj" />
+    <ProjectReference Include="..\..\Techodist.Order.Infrastructure\Techodist.Order.Infrastructure.csproj" />
+    <ProjectReference Include="..\..\..\..\BuildingBlocks\Techodist.BuildingBlocks.Core\Techodist.BuildingBlocks.Core.csproj" />
+  </ItemGroup>
+
+  <!-- Сущность заявки называется Order, а её корневое пространство имён — Techodist.Order:
+       объявление namespace перекрыло бы тип, поэтому тип доступен под псевдонимом. -->
+  <ItemGroup>
+    <Using Include="Techodist.Order.Domain.Entities.Order" Alias="OrderAggregate" />
+  </ItemGroup>
+
+</Project>

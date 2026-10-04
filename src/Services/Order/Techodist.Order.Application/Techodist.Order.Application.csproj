@@ -1,0 +1,34 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <RootNamespace>Techodist.Order.Application</RootNamespace>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="MediatR" />
+    <PackageReference Include="Mapster" />
+    <PackageReference Include="FluentValidation" />
+    <PackageReference Include="FluentValidation.DependencyInjectionExtensions" />
+    <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" />
+    <!-- Публикация события из обработчика идёт через IPublishEndpoint (MassTransit + outbox). -->
+    <PackageReference Include="MassTransit" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Techodist.Order.Domain\Techodist.Order.Domain.csproj" />
+    <ProjectReference Include="..\..\..\BuildingBlocks\Techodist.BuildingBlocks.Application\Techodist.BuildingBlocks.Application.csproj" />
+    <ProjectReference Include="..\..\..\BuildingBlocks\Techodist.BuildingBlocks.Core\Techodist.BuildingBlocks.Core.csproj" />
+    <ProjectReference Include="..\..\..\BuildingBlocks\Techodist.BuildingBlocks.Messaging\Techodist.BuildingBlocks.Messaging.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="Techodist.Order.UnitTests" />
+  </ItemGroup>
+
+  <!-- Сущность заявки называется Order, а её корневое пространство имён — Techodist.Order:
+       объявление namespace перекрыло бы тип, поэтому тип доступен под псевдонимом. -->
+  <ItemGroup>
+    <Using Include="Techodist.Order.Domain.Entities.Order" Alias="OrderAggregate" />
+  </ItemGroup>
+
+</Project>

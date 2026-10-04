@@ -1,0 +1,11 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <RootNamespace>Techodist.Order.Domain</RootNamespace>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\..\BuildingBlocks\Techodist.BuildingBlocks.Core\Techodist.BuildingBlocks.Core.csproj" />
+  </ItemGroup>
+
+</Project>
