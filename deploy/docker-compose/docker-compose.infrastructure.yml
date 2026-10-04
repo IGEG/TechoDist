@@ -1,70 +1,70 @@
 # =============================================================================
-# EcoTech — локальная инфраструктура для разработки.
+# Techodist — локальная инфраструктура для разработки.
 # Каждый микросервис с реляционными данными получает СВОЮ PostgreSQL (database-per-service).
 # Запуск:  docker compose -f deploy/docker-compose/docker-compose.infrastructure.yml up -d
 # =============================================================================
-name: ecotech-infra
+name: techodist-infra
 
 services:
   # ------------------------------------------------------------------ PostgreSQL
   catalog-db:
     image: postgres:16-alpine
-    container_name: ecotech-catalog-db
+    container_name: techodist-catalog-db
     environment:
-      POSTGRES_DB: ecotech_catalog
-      POSTGRES_USER: ${POSTGRES_USER:-ecotech}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-ecotech_dev_pwd}
+      POSTGRES_DB: techodist_catalog
+      POSTGRES_USER: ${POSTGRES_USER:-techodist}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-techodist_dev_pwd}
     ports:
       - "5433:5432"
     volumes:
       - catalog-db-data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-ecotech} -d ecotech_catalog"]
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-techodist} -d techodist_catalog"]
       interval: 10s
       timeout: 5s
       retries: 5
-    networks: [ecotech]
+    networks: [techodist]
 
   identity-db:
     image: postgres:16-alpine
-    container_name: ecotech-identity-db
+    container_name: techodist-identity-db
     environment:
-      POSTGRES_DB: ecotech_identity
-      POSTGRES_USER: ${POSTGRES_USER:-ecotech}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-ecotech_dev_pwd}
+      POSTGRES_DB: techodist_identity
+      POSTGRES_USER: ${POSTGRES_USER:-techodist}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-techodist_dev_pwd}
     ports:
       - "5434:5432"
     volumes:
       - identity-db-data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-ecotech} -d ecotech_identity"]
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-techodist} -d techodist_identity"]
       interval: 10s
       timeout: 5s
       retries: 5
-    networks: [ecotech]
+    networks: [techodist]
 
   order-db:
     image: postgres:16-alpine
-    container_name: ecotech-order-db
+    container_name: techodist-order-db
     environment:
-      POSTGRES_DB: ecotech_order
-      POSTGRES_USER: ${POSTGRES_USER:-ecotech}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-ecotech_dev_pwd}
+      POSTGRES_DB: techodist_order
+      POSTGRES_USER: ${POSTGRES_USER:-techodist}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-techodist_dev_pwd}
     ports:
       - "5435:5432"
     volumes:
       - order-db-data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-ecotech} -d ecotech_order"]
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-techodist} -d techodist_order"]
       interval: 10s
       timeout: 5s
       retries: 5
-    networks: [ecotech]
+    networks: [techodist]
 
   # ------------------------------------------------------------------------ Redis
   redis:
     image: redis:7-alpine
-    container_name: ecotech-redis
+    container_name: techodist-redis
     command: ["redis-server", "--appendonly", "yes"]
     ports:
       - "6379:6379"
@@ -75,15 +75,15 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
-    networks: [ecotech]
+    networks: [techodist]
 
   # --------------------------------------------------------------------- RabbitMQ
   rabbitmq:
     image: rabbitmq:3.13-management-alpine
-    container_name: ecotech-rabbitmq
+    container_name: techodist-rabbitmq
     environment:
-      RABBITMQ_DEFAULT_USER: ${RABBITMQ_USER:-ecotech}
-      RABBITMQ_DEFAULT_PASS: ${RABBITMQ_PASSWORD:-ecotech_dev_pwd}
+      RABBITMQ_DEFAULT_USER: ${RABBITMQ_USER:-techodist}
+      RABBITMQ_DEFAULT_PASS: ${RABBITMQ_PASSWORD:-techodist_dev_pwd}
     ports:
       - "5672:5672"     # AMQP
       - "15672:15672"   # Management UI
@@ -94,12 +94,12 @@ services:
       interval: 15s
       timeout: 10s
       retries: 5
-    networks: [ecotech]
+    networks: [techodist]
 
   # ----------------------------------------------------------------- Elasticsearch
   elasticsearch:
     image: docker.elastic.co/elasticsearch/elasticsearch:8.15.0
-    container_name: ecotech-elasticsearch
+    container_name: techodist-elasticsearch
     environment:
       discovery.type: single-node
       xpack.security.enabled: "false"
@@ -113,11 +113,11 @@ services:
       interval: 15s
       timeout: 10s
       retries: 10
-    networks: [ecotech]
+    networks: [techodist]
 
   kibana:
     image: docker.elastic.co/kibana/kibana:8.15.0
-    container_name: ecotech-kibana
+    container_name: techodist-kibana
     environment:
       ELASTICSEARCH_HOSTS: http://elasticsearch:9200
     ports:
@@ -125,16 +125,16 @@ services:
     depends_on:
       elasticsearch:
         condition: service_healthy
-    networks: [ecotech]
+    networks: [techodist]
 
   # ------------------------------------------------------- MailHog (ловушка писем)
   mailhog:
     image: mailhog/mailhog:latest
-    container_name: ecotech-mailhog
+    container_name: techodist-mailhog
     ports:
       - "1025:1025"   # SMTP
       - "8025:8025"   # Web UI
-    networks: [ecotech]
+    networks: [techodist]
 
 volumes:
   catalog-db-data:
@@ -145,5 +145,5 @@ volumes:
   elastic-data:
 
 networks:
-  ecotech:
+  techodist:
     driver: bridge

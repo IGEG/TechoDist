@@ -23,13 +23,13 @@ jobs:
           dotnet-version: ${{ env.DOTNET_VERSION }}
 
       - name: Restore
-        run: dotnet restore EcoTech.sln
+        run: dotnet restore Techodist.sln
 
       - name: Build
-        run: dotnet build EcoTech.sln -c Release --no-restore
+        run: dotnet build Techodist.sln -c Release --no-restore
 
       - name: Test
-        run: dotnet test EcoTech.sln -c Release --no-build --verbosity normal
+        run: dotnet test Techodist.sln -c Release --no-build --verbosity normal
 
   frontend:
     name: Frontend build

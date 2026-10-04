@@ -11,7 +11,7 @@
 ## Решение
 
 - Каждый сервис с реляционными данными имеет **свою базу PostgreSQL**:
-  `ecotech_catalog`, `ecotech_identity`, `ecotech_order`.
+  `techodist_catalog`, `techodist_identity`, `techodist_order`.
 - Сервис **не читает** чужие БД: обмен — только через API/события.
 - Basket хранит состояние в **Redis** (не реляционные данные).
 - Search хранит индекс в **Elasticsearch**.

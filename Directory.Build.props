@@ -12,10 +12,10 @@
   </PropertyGroup>
 
   <PropertyGroup>
-    <Company>EcoTech</Company>
-    <Product>EcoTech - интернет-магазин оборудования для регенерации растворителей</Product>
+    <Company>Techodist</Company>
+    <Product>Techodist - интернет-магазин оборудования для регенерации растворителей</Product>
     <Version>0.1.0</Version>
-    <Authors>EcoTech</Authors>
+    <Authors>Techodist</Authors>
   </PropertyGroup>
 
 </Project>

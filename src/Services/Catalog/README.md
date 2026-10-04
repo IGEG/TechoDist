@@ -5,13 +5,13 @@
 ## Структура
 
 ```
-EcoTech.Catalog.Domain          сущности (Product, Category, ProductImage, ProductSpecification),
+Techodist.Catalog.Domain          сущности (Product, Category, ProductImage, ProductSpecification),
                                 value objects (Money, Slug), enum ProductStatus
-EcoTech.Catalog.Application     CQRS (MediatR), DTO, Mapster-маппинг, FluentValidation,
+Techodist.Catalog.Application     CQRS (MediatR), DTO, Mapster-маппинг, FluentValidation,
                                 абстракции (IProductRepository, ICategoryRepository, ICacheService)
-EcoTech.Catalog.Infrastructure  EF Core + PostgreSQL (миграции), репозитории, Redis-кэш, health-check
-EcoTech.Catalog.Api             Minimal hosting, контроллеры, Swagger, сидирование демо-данных
-tests/EcoTech.Catalog.UnitTests xUnit: value objects, PagedResult, обработчики CQRS (18 тестов)
+Techodist.Catalog.Infrastructure  EF Core + PostgreSQL (миграции), репозитории, Redis-кэш, health-check
+Techodist.Catalog.Api             Minimal hosting, контроллеры, Swagger, сидирование демо-данных
+tests/Techodist.Catalog.UnitTests xUnit: value objects, PagedResult, обработчики CQRS (18 тестов)
 ```
 
 ## Эндпоинты
@@ -35,7 +35,7 @@ tests/EcoTech.Catalog.UnitTests xUnit: value objects, PagedResult, обрабо�
 docker compose -f deploy/docker-compose/docker-compose.infrastructure.yml up -d catalog-db redis
 
 # 2) Запуск сервиса (миграции применяются автоматически при старте)
-dotnet run --project src/Services/Catalog/EcoTech.Catalog.Api
+dotnet run --project src/Services/Catalog/Techodist.Catalog.Api
 # Swagger: http://localhost:5101/swagger
 ```
 
@@ -43,8 +43,8 @@ dotnet run --project src/Services/Catalog/EcoTech.Catalog.Api
 
 ```powershell
 dotnet ef migrations add <Name> `
-  --project src/Services/Catalog/EcoTech.Catalog.Infrastructure `
-  --startup-project src/Services/Catalog/EcoTech.Catalog.Infrastructure `
+  --project src/Services/Catalog/Techodist.Catalog.Infrastructure `
+  --startup-project src/Services/Catalog/Techodist.Catalog.Infrastructure `
   --output-dir Persistence/Migrations
 ```
 
@@ -53,7 +53,7 @@ Design-time фабрика (`CatalogDbContextFactory`) позволяет соз
 ## Тесты
 
 ```powershell
-dotnet test src/Services/Catalog/tests/EcoTech.Catalog.UnitTests
+dotnet test src/Services/Catalog/tests/Techodist.Catalog.UnitTests
 ```
 
 ## Модельный ряд (демо-данные)
@@ -75,5 +75,5 @@ dotnet test src/Services/Catalog/tests/EcoTech.Catalog.UnitTests
 Пересидировать каталог после правки демо-данных:
 
 ```powershell
-docker exec ecotech-catalog-db psql -U ecotech -d ecotech_catalog -c 'TRUNCATE "Products","ProductImages","ProductSpecifications","Categories" CASCADE;'
+docker exec techodist-catalog-db psql -U techodist -d techodist_catalog -c 'TRUNCATE "Products","ProductImages","ProductSpecifications","Categories" CASCADE;'
 ```

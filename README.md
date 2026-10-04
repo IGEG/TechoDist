@@ -1,8 +1,10 @@
-# EcoTech — интернет-магазин оборудования для регенерации растворителей
+# Techodist — интернет-магазин оборудования для регенерации растворителей
 
 Учебный проект уровня enterprise: клиент-серверное приложение на микросервисной
-архитектуре. Домен — продажа установок для очистки/регенерации растворителей
-(по мотивам ecotech-ngt.ru). **Онлайн-оплаты нет**: оформление заявки отправляется
+архитектуре. Домен — продажа установок для очистки/регенерации растворителей.
+Оборудование выпускается под торговой маркой **Techodist** (кратко **TD**): номер модели
+соответствует объёму установки — **TD20** (20 л), **TD60** (60 л), **TD120** (120 л),
+вакуумное исполнение — **TDV40**. **Онлайн-оплаты нет**: оформление заявки отправляется
 на e-mail магазина.
 
 ## Стек
@@ -47,7 +49,7 @@ Copy-Item .env.example .env
 docker compose -f deploy/docker-compose/docker-compose.infrastructure.yml up -d
 
 # 3. Собрать backend
-dotnet build EcoTech.sln
+dotnet build Techodist.sln
 ```
 
 Сервисы инфраструктуры и порты: см. [deploy/docker-compose/README.md](deploy/docker-compose/README.md).
@@ -56,7 +58,7 @@ dotnet build EcoTech.sln
 
 - [x] Фаза 0 — подготовка окружения и ADR
 - [x] Фаза 1 — скелет монорепо + BuildingBlocks + docker-compose инфраструктуры
-- [x] Фаза 2 — Catalog Service (эталонный вертикальный срез: Domain/Application/Infrastructure/Api + миграция + 18 unit-тестов)
+- [x] Фаза 2 — Catalog Service (эталонный вертикальный срез: Domain/Application/Infrastructure/Api + миграция + 19 unit-тестов)
 - [ ] Фаза 3 — Identity Service (OpenIddict)
 - [ ] Фаза 4 — API Gateway (YARP) + скелет фронтенда
 - [ ] Фаза 5 — Basket Service

@@ -1,7 +1,0 @@
-<Project Sdk="Microsoft.NET.Sdk">
-
-  <PropertyGroup>
-    <RootNamespace>EcoTech.BuildingBlocks.Core</RootNamespace>
-  </PropertyGroup>
-
-</Project>
