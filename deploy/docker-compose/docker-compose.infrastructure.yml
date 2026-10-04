@@ -1,0 +1,149 @@
+# =============================================================================
+# EcoTech — локальная инфраструктура для разработки.
+# Каждый микросервис с реляционными данными получает СВОЮ PostgreSQL (database-per-service).
+# Запуск:  docker compose -f deploy/docker-compose/docker-compose.infrastructure.yml up -d
+# =============================================================================
+name: ecotech-infra
+
+services:
+  # ------------------------------------------------------------------ PostgreSQL
+  catalog-db:
+    image: postgres:16-alpine
+    container_name: ecotech-catalog-db
+    environment:
+      POSTGRES_DB: ecotech_catalog
+      POSTGRES_USER: ${POSTGRES_USER:-ecotech}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-ecotech_dev_pwd}
+    ports:
+      - "5433:5432"
+    volumes:
+      - catalog-db-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-ecotech} -d ecotech_catalog"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks: [ecotech]
+
+  identity-db:
+    image: postgres:16-alpine
+    container_name: ecotech-identity-db
+    environment:
+      POSTGRES_DB: ecotech_identity
+      POSTGRES_USER: ${POSTGRES_USER:-ecotech}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-ecotech_dev_pwd}
+    ports:
+      - "5434:5432"
+    volumes:
+      - identity-db-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-ecotech} -d ecotech_identity"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks: [ecotech]
+
+  order-db:
+    image: postgres:16-alpine
+    container_name: ecotech-order-db
+    environment:
+      POSTGRES_DB: ecotech_order
+      POSTGRES_USER: ${POSTGRES_USER:-ecotech}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-ecotech_dev_pwd}
+    ports:
+      - "5435:5432"
+    volumes:
+      - order-db-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-ecotech} -d ecotech_order"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks: [ecotech]
+
+  # ------------------------------------------------------------------------ Redis
+  redis:
+    image: redis:7-alpine
+    container_name: ecotech-redis
+    command: ["redis-server", "--appendonly", "yes"]
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis-data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks: [ecotech]
+
+  # --------------------------------------------------------------------- RabbitMQ
+  rabbitmq:
+    image: rabbitmq:3.13-management-alpine
+    container_name: ecotech-rabbitmq
+    environment:
+      RABBITMQ_DEFAULT_USER: ${RABBITMQ_USER:-ecotech}
+      RABBITMQ_DEFAULT_PASS: ${RABBITMQ_PASSWORD:-ecotech_dev_pwd}
+    ports:
+      - "5672:5672"     # AMQP
+      - "15672:15672"   # Management UI
+    volumes:
+      - rabbitmq-data:/var/lib/rabbitmq
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "-q", "ping"]
+      interval: 15s
+      timeout: 10s
+      retries: 5
+    networks: [ecotech]
+
+  # ----------------------------------------------------------------- Elasticsearch
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:8.15.0
+    container_name: ecotech-elasticsearch
+    environment:
+      discovery.type: single-node
+      xpack.security.enabled: "false"
+      ES_JAVA_OPTS: "-Xms512m -Xmx512m"
+    ports:
+      - "9200:9200"
+    volumes:
+      - elastic-data:/usr/share/elasticsearch/data
+    healthcheck:
+      test: ["CMD-SHELL", "curl -fs http://localhost:9200/_cluster/health || exit 1"]
+      interval: 15s
+      timeout: 10s
+      retries: 10
+    networks: [ecotech]
+
+  kibana:
+    image: docker.elastic.co/kibana/kibana:8.15.0
+    container_name: ecotech-kibana
+    environment:
+      ELASTICSEARCH_HOSTS: http://elasticsearch:9200
+    ports:
+      - "5601:5601"
+    depends_on:
+      elasticsearch:
+        condition: service_healthy
+    networks: [ecotech]
+
+  # ------------------------------------------------------- MailHog (ловушка писем)
+  mailhog:
+    image: mailhog/mailhog:latest
+    container_name: ecotech-mailhog
+    ports:
+      - "1025:1025"   # SMTP
+      - "8025:8025"   # Web UI
+    networks: [ecotech]
+
+volumes:
+  catalog-db-data:
+  identity-db-data:
+  order-db-data:
+  redis-data:
+  rabbitmq-data:
+  elastic-data:
+
+networks:
+  ecotech:
+    driver: bridge

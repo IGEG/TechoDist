@@ -1,0 +1,46 @@
+# ===== .NET =====
+[Bb]in/
+[Oo]bj/
+[Oo]ut/
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+.vs/
+*.DotSettings.user
+[Dd]ebug/
+[Rr]elease/
+artifacts/
+TestResults/
+*.trx
+*.coverage
+*.nupkg
+
+# ===== Node / Frontend =====
+node_modules/
+dist/
+dist-ssr/
+*.local
+.vite/
+coverage/
+.eslintcache
+
+# ===== Env / Secrets (никогда не коммитим реальные секреты) =====
+.env
+.env.*
+!.env.example
+*.pfx
+*.key
+secrets/
+
+# ===== IDE / OS =====
+.idea/
+.vscode/*
+!.vscode/extensions.json
+!.vscode/settings.json
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# ===== Docker / K8s =====
+deploy/**/secrets.yaml
