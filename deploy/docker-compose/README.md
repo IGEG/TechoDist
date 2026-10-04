@@ -51,6 +51,32 @@ Search наполняет индекс `techodist-products` в `elasticsearch` �
 `rabbitmq` и сверкой с публичным Catalog API; Kibana (`:5601`) нужна только для ручной
 проверки документов.
 
+## Стек наблюдаемости (ADR 0008)
+
+Метрики, логи и трейсы живут в отдельном compose-файле (`docker-compose.observability.yml`).
+Он поднимается независимо от инфраструктуры: у стека своя сеть `observability` и свои порты,
+поэтому оба файла спокойно работают одновременно.
+
+```powershell
+docker compose -f deploy/docker-compose/docker-compose.observability.yml up -d
+```
+
+| Сервис | Образ | Порт(ы) | Назначение |
+|--------|-------|---------|------------|
+| otel-collector | otel/opentelemetry-collector-contrib:0.111.0 | **4317**, **4318**, 13133, 55679 | приём OTLP и отправка трейсов в Jaeger |
+| jaeger | jaegertracing/all-in-one:1.60.0 | **16686** | хранение и UI трейсов (in-memory) |
+| prometheus | prom/prometheus:v2.54.1 | **9090** | скрейп `/metrics` сервисов и правила алертов |
+| alertmanager | prom/alertmanager:v0.27.0 | **9093** | приём и группировка алертов |
+| loki | grafana/loki:3.1.1 | **3100** | хранилище логов (Serilog пишет напрямую) |
+| promtail | grafana/promtail:3.1.1 | — | сбор stdout контейнеров Techodist (когда сервисы в Docker) |
+| grafana | grafana/grafana:11.2.0 | **3000** | единое окно: дашборды, логи, переход в трейсы |
+
+Логин Grafana — `GRAFANA_ADMIN_USER` / `GRAFANA_ADMIN_PASSWORD` из `.env` (по умолчанию
+`admin` / `admin`). Prometheus скрейпит сервисы, запущенные на хосте, по адресам
+`host.docker.internal:5100…5106`, поэтому сервисы должны быть подняты (`dotnet run`).
+Конфиги стека — `deploy/observability`: описание, дашборды и команды проверки —
+[deploy/observability/README.md](../observability/README.md).
+
 ## Строки подключения (для `appsettings.Development.json` сервисов)
 
 ```

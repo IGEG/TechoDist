@@ -1,0 +1,237 @@
+{
+  "annotations": { "list": [] },
+  "description": "Бизнес-метрики Techodist из статического Meter (TechodistDiagnostics): оформленные заявки и их суммы, смены статусов менеджером, добавления в гостевую корзину, публикации товаров каталога и письма Notification. Счётчики OTel отдаются Prometheus-экспортёром с суффиксом _total, единицы в фигурных скобках ({order}, {email}) в имя не попадают.",
+  "editable": true,
+  "graphTooltip": 1,
+  "links": [
+    { "asDropdown": false, "icon": "external link", "targetBlank": true, "title": "Jaeger: поиск трейсов", "type": "link", "url": "http://localhost:16686" }
+  ],
+  "refresh": "1m",
+  "schemaVersion": 39,
+  "tags": [ "techodist", "business", "kpi" ],
+  "templating": {
+    "list": [
+      {
+        "allValue": ".*",
+        "current": { "selected": true, "text": [ "All" ], "value": [ "$__all" ] },
+        "datasource": { "type": "prometheus", "uid": "prometheus" },
+        "definition": "label_values(up{job!=\"prometheus\"}, service)",
+        "includeAll": true,
+        "label": "Сервис",
+        "multi": true,
+        "name": "service",
+        "options": [],
+        "query": { "query": "label_values(up{job!=\"prometheus\"}, service)", "refId": "TechodistServices" },
+        "refresh": 2,
+        "sort": 1,
+        "type": "query"
+      }
+    ]
+  },
+  "time": { "from": "now-24h", "to": "now" },
+  "timezone": "browser",
+  "title": "Techodist · Бизнес-метрики",
+  "uid": "techodist-business",
+  "version": 1,
+  "weekStart": "monday",
+  "panels": [
+    {
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "fieldConfig": {
+        "defaults": { "color": { "mode": "value" }, "unit": "short" },
+        "overrides": []
+      },
+      "gridPos": { "h": 4, "w": 6, "x": 0, "y": 0 },
+      "id": 1,
+      "options": { "colorMode": "value", "graphMode": "area", "reduceOptions": { "calcs": [ "lastNotNull" ], "fields": "", "values": false }, "textMode": "auto" },
+      "targets": [
+        { "datasource": { "type": "prometheus", "uid": "prometheus" }, "expr": "sum(increase(techodist_orders_submitted_total{service=~\"$service\"}[24h]))", "instant": true, "legendFormat": "заявок", "refId": "A" }
+      ],
+      "title": "Оформлено заявок за сутки",
+      "type": "stat"
+    },
+    {
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "fieldConfig": {
+        "defaults": { "color": { "mode": "value" }, "unit": "currencyRUB" },
+        "overrides": []
+      },
+      "gridPos": { "h": 4, "w": 6, "x": 6, "y": 0 },
+      "id": 2,
+      "options": { "colorMode": "value", "graphMode": "area", "reduceOptions": { "calcs": [ "lastNotNull" ], "fields": "", "values": false }, "textMode": "auto" },
+      "targets": [
+        { "datasource": { "type": "prometheus", "uid": "prometheus" }, "expr": "sum(increase(techodist_orders_amount_sum{service=~\"$service\"}[24h])) / clamp_min(sum(increase(techodist_orders_amount_count{service=~\"$service\"}[24h])), 1)", "instant": true, "legendFormat": "средний чек", "refId": "A" }
+      ],
+      "title": "Средний чек за сутки",
+      "type": "stat"
+    },
+    {
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "fieldConfig": {
+        "defaults": { "color": { "mode": "value" }, "unit": "currencyRUB" },
+        "overrides": []
+      },
+      "gridPos": { "h": 4, "w": 6, "x": 12, "y": 0 },
+      "id": 3,
+      "options": { "colorMode": "value", "graphMode": "area", "reduceOptions": { "calcs": [ "lastNotNull" ], "fields": "", "values": false }, "textMode": "auto" },
+      "targets": [
+        { "datasource": { "type": "prometheus", "uid": "prometheus" }, "expr": "sum(increase(techodist_orders_amount_sum{service=~\"$service\"}[24h]))", "instant": true, "legendFormat": "сумма заявок", "refId": "A" }
+      ],
+      "title": "Сумма заявок за сутки",
+      "type": "stat"
+    },
+    {
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "thresholds" },
+          "thresholds": { "mode": "absolute", "steps": [ { "color": "green", "value": null }, { "color": "red", "value": 1 } ] },
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "gridPos": { "h": 4, "w": 6, "x": 18, "y": 0 },
+      "id": 4,
+      "options": { "colorMode": "background", "graphMode": "none", "reduceOptions": { "calcs": [ "lastNotNull" ], "fields": "", "values": false }, "textMode": "value_and_name" },
+      "targets": [
+        { "datasource": { "type": "prometheus", "uid": "prometheus" }, "expr": "sum(increase(techodist_notifications_failed_total{service=~\"$service\"}[24h]))", "instant": true, "legendFormat": "не отправлено", "refId": "A" },
+        { "datasource": { "type": "prometheus", "uid": "prometheus" }, "expr": "sum(increase(techodist_notifications_sent_total{service=~\"$service\"}[24h]))", "instant": true, "legendFormat": "отправлено", "refId": "B" }
+      ],
+      "title": "Письма за сутки",
+      "type": "stat"
+    },
+    {
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "fieldConfig": {
+        "defaults": { "color": { "mode": "palette-classic" }, "custom": { "fillOpacity": 10, "lineWidth": 2, "stacking": { "mode": "normal" } }, "unit": "short" },
+        "overrides": []
+      },
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 4 },
+      "id": 5,
+      "options": { "legend": { "calcs": [ "sum" ], "displayMode": "table", "placement": "bottom", "showLegend": true }, "tooltip": { "mode": "multi", "sort": "desc" } },
+      "targets": [
+        { "datasource": { "type": "prometheus", "uid": "prometheus" }, "expr": "sum by (channel) (increase(techodist_orders_submitted_total{service=~\"$service\"}[1h]))", "legendFormat": "за час · {{channel}}", "refId": "A" }
+      ],
+      "title": "Заявки: канал связи покупателя",
+      "type": "timeseries"
+    },
+    {
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "fieldConfig": {
+        "defaults": { "color": { "mode": "palette-classic" }, "custom": { "fillOpacity": 0, "lineWidth": 2 }, "unit": "currencyRUB" },
+        "overrides": []
+      },
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 4 },
+      "id": 6,
+      "options": { "legend": { "calcs": [ "mean", "max" ], "displayMode": "table", "placement": "bottom", "showLegend": true }, "tooltip": { "mode": "multi", "sort": "desc" } },
+      "targets": [
+        { "datasource": { "type": "prometheus", "uid": "prometheus" }, "expr": "histogram_quantile(0.50, sum by (le, currency) (rate(techodist_orders_amount_bucket{service=~\"$service\"}[30m])))", "legendFormat": "p50 · {{currency}}", "refId": "A" },
+        { "datasource": { "type": "prometheus", "uid": "prometheus" }, "expr": "histogram_quantile(0.95, sum by (le, currency) (rate(techodist_orders_amount_bucket{service=~\"$service\"}[30m])))", "legendFormat": "p95 · {{currency}}", "refId": "B" }
+      ],
+      "title": "Сумма заявки: p50 / p95",
+      "type": "timeseries"
+    },
+    {
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "fieldConfig": {
+        "defaults": { "color": { "mode": "palette-classic" }, "custom": { "fillOpacity": 10, "lineWidth": 2 }, "unit": "short" },
+        "overrides": []
+      },
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 12 },
+      "id": 7,
+      "options": { "legend": { "calcs": [ "sum" ], "displayMode": "table", "placement": "bottom", "showLegend": true }, "tooltip": { "mode": "multi", "sort": "desc" } },
+      "targets": [
+        { "datasource": { "type": "prometheus", "uid": "prometheus" }, "expr": "sum by (from_status, to_status) (increase(techodist_orders_status_changes_total{service=~\"$service\"}[1h]))", "legendFormat": "{{from_status}} → {{to_status}}", "refId": "A" }
+      ],
+      "title": "Смены статусов заявок за час",
+      "type": "timeseries"
+    },
+    {
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "fieldConfig": {
+        "defaults": { "color": { "mode": "palette-classic" }, "custom": { "fillOpacity": 10, "lineWidth": 2 }, "unit": "short" },
+        "overrides": []
+      },
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 12 },
+      "id": 8,
+      "options": { "legend": { "calcs": [ "lastNotNull", "max" ], "displayMode": "table", "placement": "bottom", "showLegend": true }, "tooltip": { "mode": "multi", "sort": "desc" } },
+      "targets": [
+        { "datasource": { "type": "prometheus", "uid": "prometheus" }, "expr": "sum(increase(techodist_basket_items_added_total{service=~\"$service\"}[1h]))", "legendFormat": "позиций за час", "refId": "A" },
+        { "datasource": { "type": "prometheus", "uid": "prometheus" }, "expr": "sum(rate(techodist_basket_items_added_total{service=~\"$service\"}[5m])) * 60", "legendFormat": "позиций в минуту", "refId": "B" }
+      ],
+      "title": "Корзина: добавления позиций",
+      "type": "timeseries"
+    },
+    {
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "fieldConfig": {
+        "defaults": { "color": { "mode": "palette-classic" }, "custom": { "fillOpacity": 10, "lineWidth": 2 }, "unit": "short" },
+        "overrides": []
+      },
+      "gridPos": { "h": 8, "w": 8, "x": 0, "y": 20 },
+      "id": 9,
+      "options": { "legend": { "calcs": [ "lastNotNull", "max" ], "displayMode": "table", "placement": "bottom", "showLegend": true }, "tooltip": { "mode": "multi", "sort": "desc" } },
+      "targets": [
+        { "datasource": { "type": "prometheus", "uid": "prometheus" }, "expr": "sum(increase(techodist_catalog_products_published_total{service=~\"$service\"}[1h]))", "legendFormat": "товаров за час", "refId": "A" },
+        { "datasource": { "type": "prometheus", "uid": "prometheus" }, "expr": "sum(rate(techodist_catalog_products_published_total{service=~\"$service\"}[5m])) * 60", "legendFormat": "товаров в минуту", "refId": "B" }
+      ],
+      "title": "Каталог: публикации товаров",
+      "type": "timeseries"
+    },
+    {
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "fieldConfig": {
+        "defaults": { "color": { "mode": "palette-classic" }, "custom": { "fillOpacity": 10, "lineWidth": 2 }, "unit": "short" },
+        "overrides": []
+      },
+      "gridPos": { "h": 8, "w": 8, "x": 8, "y": 20 },
+      "id": 10,
+      "options": { "legend": { "calcs": [ "sum" ], "displayMode": "table", "placement": "bottom", "showLegend": true }, "tooltip": { "mode": "multi", "sort": "desc" } },
+      "targets": [
+        { "datasource": { "type": "prometheus", "uid": "prometheus" }, "expr": "sum by (kind) (increase(techodist_notifications_sent_total{service=~\"$service\"}[1h]))", "legendFormat": "{{kind}}", "refId": "A" }
+      ],
+      "title": "Письма отправлены за час",
+      "type": "timeseries"
+    },
+    {
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "palette-classic" },
+          "custom": { "fillOpacity": 10, "lineWidth": 2 },
+          "thresholds": { "mode": "absolute", "steps": [ { "color": "green", "value": null }, { "color": "red", "value": 1 } ] },
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "gridPos": { "h": 8, "w": 8, "x": 16, "y": 20 },
+      "id": 11,
+      "options": { "legend": { "calcs": [ "sum" ], "displayMode": "table", "placement": "bottom", "showLegend": true }, "tooltip": { "mode": "multi", "sort": "desc" } },
+      "targets": [
+        { "datasource": { "type": "prometheus", "uid": "prometheus" }, "expr": "sum by (kind) (increase(techodist_notifications_failed_total{service=~\"$service\"}[1h]))", "legendFormat": "{{kind}}", "refId": "A" }
+      ],
+      "title": "Письма с ошибкой отправки за час",
+      "type": "timeseries"
+    },
+    {
+      "datasource": { "type": "loki", "uid": "loki" },
+      "gridPos": { "h": 9, "w": 24, "x": 0, "y": 28 },
+      "id": 12,
+      "options": {
+        "dedupStrategy": "none",
+        "enableLogDetails": true,
+        "prettifyLogMessage": false,
+        "showCommonLabels": false,
+        "showLabels": true,
+        "showTime": true,
+        "sortOrder": "Descending",
+        "wrapLogMessage": true
+      },
+      "targets": [
+        { "datasource": { "type": "loki", "uid": "loki" }, "expr": "{app=\"techodist\"} | json | level = \"error\"", "refId": "A" }
+      ],
+      "title": "Ошибки во всех сервисах (level = error)",
+      "type": "logs"
+    }
+  ]
+}

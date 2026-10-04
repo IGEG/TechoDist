@@ -18,6 +18,7 @@ builder.Services.AddTechodistWebApi(builder.Configuration, "Techodist · Basket 
 
 var app = builder.Build();
 
+app.UseTechodistObservability();
 app.UseTechodistWebApi();
 app.MapControllers();
 

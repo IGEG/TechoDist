@@ -1,0 +1,74 @@
+# =============================================================================
+# OpenTelemetry Collector (ADR 0008).
+#
+# Назначение: принимать OTLP-трейсы сервисов Techodist и передавать их в Jaeger.
+# Метрики не проходят через коллектор — их забирает Prometheus скрейпом /metrics,
+# а логи Serilog отправляет в Loki напрямую: коллектор остаётся транспортом трейсов
+# и точкой, где позже можно добавить другие экспортёры (Tempo, OTLP-бэкенд в K8s).
+#
+# Проверка конфигурации:
+#   docker run --rm -v deploy/observability/otel-collector/otel-collector.yaml:/etc/otelcol-contrib/config.yaml \
+#     otel/opentelemetry-collector-contrib:0.111.0 validate --config=/etc/otelcol-contrib/config.yaml
+# =============================================================================
+
+receivers:
+  otlp:
+    protocols:
+      grpc:
+        endpoint: 0.0.0.0:4317
+      http:
+        endpoint: 0.0.0.0:4318
+
+processors:
+  # Страховка от всплесков: коллектор не съедает память контейнера целиком.
+  memory_limiter:
+    check_interval: 5s
+    limit_percentage: 75
+    spike_limit_percentage: 20
+
+  # Окружение проставляем на стороне коллектора: dev-стек всегда local-development,
+  # даже если сервис запущен без ASPNETCORE_ENVIRONMENT.
+  resource:
+    attributes:
+      - key: deployment.environment
+        value: development
+        action: insert
+
+  # Батчинг уменьшает число запросов в Jaeger (трейсы одного запроса уезжают вместе).
+  batch:
+    send_batch_size: 1024
+    send_batch_max_size: 2048
+    timeout: 5s
+
+exporters:
+  otlp/jaeger:
+    endpoint: jaeger:4317
+    tls:
+      insecure: true
+  # Пишем в лог коллектора только сводку (verbosity: basic) — этого хватает,
+  # чтобы увидеть, что пайплайн жив, не заливая консоль спанами.
+  debug:
+    verbosity: basic
+
+extensions:
+  health_check:
+    endpoint: 0.0.0.0:13133
+  zpages:
+    endpoint: 0.0.0.0:55679
+
+service:
+  extensions: [health_check, zpages]
+
+  telemetry:
+    logs:
+      level: warn
+    metrics:
+      # Собственные метрики коллектора (queue/экспортёры) на внутреннем порту:
+      # наружу публиковать не обязательно, смотрим через zpages/логи.
+      address: 0.0.0.0:8888
+
+  pipelines:
+    traces:
+      receivers: [otlp]
+      processors: [memory_limiter, resource, batch]
+      exporters: [otlp/jaeger, debug]

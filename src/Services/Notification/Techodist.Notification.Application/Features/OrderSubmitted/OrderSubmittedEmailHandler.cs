@@ -1,7 +1,9 @@
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
+using Techodist.BuildingBlocks.Core.Diagnostics;
 using Techodist.BuildingBlocks.Messaging.IntegrationEvents;
 using Techodist.Notification.Application.Abstractions;
+using Techodist.Notification.Application.Email;
 using Techodist.Notification.Application.Options;
 using Techodist.Notification.Application.Templates;
 
@@ -38,11 +40,21 @@ public sealed class OrderSubmittedEmailHandler(
 
         var settings = options.Value;
 
-        await emails.SendAsync(OrderEmailTemplates.StoreNotification(message, settings.StoreEmail), cancellationToken);
+        await EmailTelemetry.SendAsync(
+            emails,
+            logger,
+            TechodistDiagnostics.NotificationKinds.StoreSubmitted,
+            message.OrderNumber,
+            OrderEmailTemplates.StoreNotification(message, settings.StoreEmail),
+            cancellationToken);
 
         if (settings.SendCustomerConfirmation)
         {
-            await emails.SendAsync(
+            await EmailTelemetry.SendAsync(
+                emails,
+                logger,
+                TechodistDiagnostics.NotificationKinds.CustomerConfirmation,
+                message.OrderNumber,
                 OrderEmailTemplates.CustomerConfirmation(message, settings.StoreName),
                 cancellationToken);
         }

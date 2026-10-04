@@ -1,0 +1,62 @@
+# =============================================================================
+# Loki — хранилище логов Techodist (ADR 0008).
+#
+# Логи приходят двумя путями:
+#  1) напрямую от приложений (Serilog + Serilog.Sinks.Grafana.Loki) — основной путь в dev;
+#  2) от Promtail — stdout контейнеров, если сервисы запущены в Docker.
+#
+# Одиночный бинарь (single binary) с файловым хранилищем: для локальной разработки
+# этого достаточно, в прод-контуре (Фаза 10) хранилище будет объектным (S3/MinIO).
+#
+# Проверка конфигурации:
+#   docker run --rm -v deploy/observability/loki/loki.yaml:/etc/loki/loki.yaml \
+#     grafana/loki:3.1.1 -config.file=/etc/loki/loki.yaml -verify-config
+# =============================================================================
+auth_enabled: false   # один арендатор (tenant): авторизация в Loki не нужна
+
+server:
+  http_listen_port: 3100
+  grpc_listen_port: 9096
+  log_level: warn
+
+common:
+  instance_addr: 127.0.0.1
+  path_prefix: /loki
+  storage:
+    filesystem:
+      chunks_directory: /loki/chunks
+      rules_directory: /loki/rules
+  replication_factor: 1
+  ring:
+    kvstore:
+      store: inmemory
+
+schema_config:
+  configs:
+    - from: 2024-01-01
+      store: tsdb
+      object_store: filesystem
+      schema: v13
+      index:
+        prefix: index_
+        period: 24h
+
+limits_config:
+  # Неделя логов — с запасом на разбор инцидента, дальше старые чанки удаляет компактор.
+  retention_period: 168h
+  max_query_series: 1000
+  allow_structured_metadata: true
+
+compactor:
+  working_directory: /loki/compactor
+  retention_enabled: true
+  delete_request_store: filesystem
+
+ruler:
+  storage:
+    type: local
+    local:
+      directory: /loki/rules
+
+analytics:
+  reporting_enabled: false

@@ -1,0 +1,47 @@
+# =============================================================================
+# Источники данных Grafana (ADR 0008): метрики — Prometheus, логи — Loki, трейсы — Jaeger.
+# Файл читается провижном при старте Grafana (см. docker-compose.observability.yml).
+# =============================================================================
+apiVersion: 1
+
+# Идемпотентность: при изменении состава источников старые версии удаляются из БД Grafana.
+deleteDatasources:
+  - name: Prometheus
+    orgId: 1
+  - name: Loki
+    orgId: 1
+  - name: Jaeger
+    orgId: 1
+
+datasources:
+  - name: Prometheus
+    uid: prometheus          # uid фиксирован: на него ссылаются дашборды и derived field ниже
+    type: prometheus
+    access: proxy
+    url: http://prometheus:9090
+    isDefault: true
+    jsonData:
+      timeInterval: 15s      # = scrape_interval, иначе Grafana режёт шаг графика
+      httpMethod: POST
+      manageAlerts: true
+
+  - name: Loki
+    uid: loki
+    type: loki
+    access: proxy
+    url: http://loki:3100
+    jsonData:
+      # Сервис обогащает записи TraceId (TraceContextEnricher) — превращаем его
+      # в ссылку на трейс Jaeger: из лога в трейс одним кликом.
+      derivedFields:
+        - name: TraceId
+          matcherRegex: "\"TraceId\":\"(\\w+)\""
+          url: "$${__value.raw}"
+          datasourceUid: jaeger
+          urlDisplayLabel: "Открыть трейс в Jaeger"
+
+  - name: Jaeger
+    uid: jaeger
+    type: jaeger
+    access: proxy
+    url: http://jaeger:16686

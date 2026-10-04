@@ -1,4 +1,5 @@
 using System.Text.Json.Serialization;
+using Techodist.BuildingBlocks.Web.Health;
 using Techodist.BuildingBlocks.Web.Middleware;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Diagnostics;
@@ -81,7 +82,7 @@ public static class WebExtensions
         app.UseSwagger();
         app.UseSwaggerUI();
         app.UseCors(CorsPolicyName);
-        app.MapHealthChecks("/health/live");
+        app.MapTechodistHealthEndpoints();
 
         return app;
     }

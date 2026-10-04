@@ -1,0 +1,39 @@
+# =============================================================================
+# Promtail — доставка логов контейнеров Docker в Loki (ADR 0008).
+#
+# В dev-контуре приложения запускаются на хосте и пишут в Loki напрямую (Serilog),
+# поэтому Promtail собирает только stdout контейнеров Techodist — он нужен, когда
+# сервисы тоже в Docker (локальный compose, Фаза 10 — Kubernetes). Фильтр по имени
+# контейнера не даёт тащить в Loki логи всего хоста.
+# =============================================================================
+server:
+  http_listen_port: 9080
+  grpc_listen_port: 0
+  log_level: warn
+
+positions:
+  filename: /tmp/positions.yaml
+
+clients:
+  - url: http://loki:3100/loki/api/v1/push
+
+scrape_configs:
+  - job_name: docker
+    docker_sd_configs:
+      - host: unix:///var/run/docker.sock
+        refresh_interval: 30s
+        filters:
+          - name: name
+            values: ["techodist-*"]
+    relabel_configs:
+      - source_labels: ["__meta_docker_container_name"]
+        regex: "/(.*)"
+        target_label: container
+      - source_labels: ["__meta_docker_container_label_com_docker_compose_service"]
+        target_label: service
+      - source_labels: ["__meta_docker_container_label_com_docker_compose_project"]
+        target_label: compose_project
+    pipeline_stages:
+      # Разбираем формат json-file драйвера Docker (stream/attrs), чтобы дальше
+      # при желании добавить json-стадии по полям Serilog.
+      - docker: {}

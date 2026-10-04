@@ -37,7 +37,7 @@ progs/
 │  ├─ Services/          # микросервисы (Catalog, Identity, Basket, Order, Notification, Search)
 │  ├─ ApiGateway/        # YARP
 │  └─ Frontend/          # React + TS + Vite
-├─ deploy/               # docker-compose, helm, k8s
+├─ deploy/               # docker-compose, observability, helm, k8s
 └─ .github/workflows/    # CI/CD
 ```
 
@@ -98,6 +98,28 @@ curl -X POST http://localhost:5102/connect/token -d "grant_type=password&client_
 Подробности потока (пароль/refresh, аудитории, время жизни, подпись) —
 [ADR 0004](docs/adr/0004-openiddict-admin-only.md).
 
+## Наблюдаемость (dev)
+
+Логи, метрики и трейсы поднимаются отдельным стеком (ADR 0008) — сервисы запускаются как обычно
+(`dotnet run`), а телеметрия уезжает в контейнеры:
+
+```powershell
+docker compose -f deploy/docker-compose/docker-compose.observability.yml up -d
+```
+
+| Инструмент | Адрес | Что смотреть |
+|------------|-------|--------------|
+| Grafana | http://localhost:3000 (`admin` / `admin`) | дашборды «Сервисы (RED)» и «Бизнес-метрики», логи Loki, переход в трейс по `TraceId` |
+| Prometheus | http://localhost:9090 | цели скрейпа `/metrics` (сервисы на `localhost:5100…5106`) и правила алертов |
+| Jaeger | http://localhost:16686 | трейсы запросов через шлюз и сервисы |
+| Alertmanager | http://localhost:9093 | сработавшие алерты (канал доставки подключается в `alertmanager.yml`) |
+
+Настройки сервиса живут в секции `Observability` его `appsettings.Development.json`
+(`OtlpEndpoint`, `LokiUri`, `TraceSamplingRatio`) и переопределяются переменными окружения
+(`Observability__LokiUri`). Без запущенного стека сервисы работают как раньше — экспортёры лишь
+пишут ошибку в лог. Описание стека, дашбордов и команд проверки конфигов —
+[deploy/observability/README.md](deploy/observability/README.md).
+
 ## Запуск фронтенда (dev)
 
 SPA на Vite (порт 5173). Наружу ходит только в шлюз: адрес API задаётся переменной
@@ -155,6 +177,6 @@ npm run build   # tsc -b + vite build
 - [x] Фаза 6 — Order + Notification + RabbitMQ (заявка из гостевой корзины: номер `TD-ГГГГММДД-00042`, воронка статусов `Pending → Confirmed → InProgress → Completed/Cancelled`, transactional outbox и события `OrderSubmitted`/`OrderStatusChanged`, письма магазину и клиенту в Notification с дедупликацией по `MessageId`; 111 unit-тестов Order + 36 unit-тестов Notification + 18 unit-тестов шлюза (включая разбор гостевых и админских маршрутов `order-api`))
 - [x] Фаза 7 — Search Service (Elasticsearch): индекс товаров как проекция каталога (явный маппинг, анализатор `russian`, `name.keyword` для tie-break), наполнение событием `ProductChanged` из outbox каталога и реконсиляцией по расписанию, публичный поиск `GET /search/api/search/products` через шлюз с фильтрами/сортировкой/пагинацией; 20 unit-тестов Search + 19 unit-тестов шлюза (маршрут `search-api` и агрегация health)
 - [x] Фаза 8 — Полный фронтенд: витрина закрыта целиком (корзина гостя, оформление заявки и статус по номеру, кнопка «В корзину» и бейдж в шапке), админ-CRUD каталога (список с черновиками и архивом, создание/правка/публикация/снятие с продажи/удаление черновика, создание категорий), автоматическое продление access-токена по refresh-токену; админский срез `GET /catalog/api/products/admin` в Catalog + админские write-маршруты каталога на шлюзе; 92 vitest-теста фронтенда, 22 unit-теста Catalog, 19 unit-тестов шлюза
-- [ ] Фаза 9 — Наблюдаемость
+- [x] Фаза 9 — Наблюдаемость: `AddTechodistObservability`/`UseTechodistObservability` во всех 7 сервисах (трейсы OTLP → Collector → Jaeger, метрики `/metrics` → Prometheus, логи Serilog → Loki с `TraceId`), локальный стек `docker-compose.observability.yml` (Prometheus + 6 правил алертов, Alertmanager, Loki, Promtail, Grafana с провижном), 2 дашборда Grafana («Сервисы (RED)» и «Бизнес-метрики»), health-эндпоинты `/health/live` и `/health/ready` с JSON-отчётом, валидация конфигов в CI; 25 unit-тестов наблюдаемости (всего 373 unit-теста)
 - [ ] Фаза 10 — Kubernetes (k3s)
 - [ ] Фаза 11 — Полировка

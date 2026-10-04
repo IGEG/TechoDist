@@ -188,15 +188,36 @@ tests/Service.*.Tests    -> Unit + Integration (Testcontainers)
 
 ## 5. Наблюдаемость
 
-| Слой | Инструмент |
-|------|------------|
-| Метрики | Prometheus + Grafana |
-| Логи | Serilog -> Loki + Promtail (просмотр в Grafana) |
-| Трейсы | OpenTelemetry -> OpenTelemetry Collector -> Jaeger |
-| Алерты | Alertmanager |
+| Слой | Инструмент | Путь данных |
+|------|------------|-------------|
+| Метрики | Prometheus + Grafana | скрейп `/metrics` (OpenTelemetry Prometheus exporter) по портам сервисов |
+| Логи | Serilog -> Loki (+ Promtail) | sink Grafana Loki напрямую, `TraceId` в каждой записи |
+| Трейсы | OpenTelemetry -> OpenTelemetry Collector -> Jaeger | OTLP gRPC `localhost:4317` -> `otel-collector` |
+| Алерты | Prometheus rules -> Alertmanager | 6 правил в `deploy/observability/prometheus/alerts.yml` |
 
-Каждый сервис экспортирует `/metrics`, `/health/live`, `/health/ready`, а также
-трассирует входящие/исходящие вызовы (aspnetcore, http, EF Core, MassTransit).
+- **Инструментирование.** `TechodistDiagnostics` (`BuildingBlocks.Core/Diagnostics`) держит
+  статические `ActivitySource` и `Meter` с именем `Techodist` — их подписывает OpenTelemetry —
+  и бизнес-метрики: `techodist.orders.submitted`, `techodist.orders.amount`,
+  `techodist.orders.status_changes`, `techodist.basket.items_added`,
+  `techodist.catalog.products.published`, `techodist.notifications.sent|failed`.
+  Ручные спаны — `order.submit`, `order.status_change`, `notification.send`.
+- **Подключение.** Во всех 7 сервисах `Program.cs` вызываются `AddTechodistObservability("<service>")`
+  (Serilog + Loki, OTLP-экспортёр, инструментация ASP.NET Core / HttpClient / EF Core / MassTransit,
+  `/metrics`) и `UseTechodistObservability()` (логирование запросов и карта скрейпа). Настройки —
+  секция `Observability` (`OtlpEndpoint`, `LokiUri`, `PrometheusEnabled`, `PrometheusPath`,
+  `RequestLoggingEnabled`, `TraceSamplingRatio`, `AdditionalActivitySources`, `AdditionalMeters`).
+- **Корреляция.** `TraceContextEnricher` добавляет в лог `TraceId`/`SpanId` (W3C), а datasource Loki
+  в Grafana превращает `TraceId` в ссылку на трейс Jaeger — от лога к трейсу одним кликом.
+- **Пробы.** `/health/live` (жив ли процесс) и `/health/ready` (БД, Redis, брокер) с JSON-отчётом
+  (`HealthReportJsonWriter`); у шлюза — агрегация health всех сервисов.
+- **Локальный стек.** `deploy/docker-compose/docker-compose.observability.yml`; конфиги —
+  `deploy/observability/**` (Prometheus + алерты, Alertmanager, Collector, Loki, Promtail, Grafana
+  provisioning + 2 дашборда). Детали — [deploy/observability/README.md](../deploy/observability/README.md).
+- **Сэмплирование.** `ParentBasedSampler` + `TraceIdRatioBasedSampler` по `TraceSamplingRatio`
+  (в dev — 1, все трейсы).
+- **CI.** Джоба `deploy-configs` валидирует конфиги стека: `docker compose config`, `promtool
+  check config/rules`, `amtool check-config`, `otelcol validate`, `loki -verify-config`,
+  `promtail -check-syntax`, JSON дашбордов.
 
 ## 6. Развёртывание
 

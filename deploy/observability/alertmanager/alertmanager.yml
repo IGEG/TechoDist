@@ -1,0 +1,42 @@
+# =============================================================================
+# Alertmanager — приём алертов Prometheus (ADR 0008).
+#
+# В учебном контуре внешнего канала доставки нет: алерты видны в UI
+# http://localhost:9093, а получатель (email/webhook) подключается раскомментированием
+# блока ниже — SMTP-ловушка MailHog уже есть в docker-compose.infrastructure.yml.
+#
+# Проверка конфигурации: amtool check-config alertmanager.yml
+# =============================================================================
+global:
+  resolve_timeout: 5m
+
+route:
+  receiver: default
+  # Группируем по сервису: одна вспышка ошибок — одно уведомление, а не сотня.
+  group_by: ["alertname", "service", "severity"]
+  group_wait: 10s
+  group_interval: 5m
+  repeat_interval: 3h
+  routes:
+    # Критичное (сервис недоступен) напоминаем чаще, чем предупреждения.
+    - matchers:
+        - severity="critical"
+      receiver: default
+      repeat_interval: 30m
+
+inhibit_rules:
+  # Если сервис лежит, его «медленные запросы» и «5xx» только шумят — гасим их.
+  - source_matchers:
+      - severity="critical"
+    target_matchers:
+      - severity="warning"
+    equal: ["service"]
+
+receivers:
+  - name: default
+    # Заготовка под реальные каналы:
+    # email_configs:
+    #   - to: ops@techodist.local
+    #     from: alertmanager@techodist.local
+    #     smarthost: mailhog:1025
+    #     require_tls: false

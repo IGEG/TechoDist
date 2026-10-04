@@ -26,6 +26,7 @@ var app = builder.Build();
 
 await OrderDbInitializer.InitializeAsync(app.Services, app.Logger);
 
+app.UseTechodistObservability();
 app.UseTechodistWebApi();
 app.UseAuthentication();
 app.UseAuthorization();

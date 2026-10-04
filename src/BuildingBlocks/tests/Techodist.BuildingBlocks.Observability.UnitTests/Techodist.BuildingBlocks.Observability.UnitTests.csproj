@@ -1,0 +1,20 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <RootNamespace>Techodist.BuildingBlocks.Observability.UnitTests</RootNamespace>
+    <IsPackable>false</IsPackable>
+    <IsTestProject>true</IsTestProject>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.NET.Test.Sdk" />
+    <PackageReference Include="xunit" />
+    <PackageReference Include="xunit.runner.visualstudio" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\Techodist.BuildingBlocks.Core\Techodist.BuildingBlocks.Core.csproj" />
+    <ProjectReference Include="..\..\Techodist.BuildingBlocks.Observability\Techodist.BuildingBlocks.Observability.csproj" />
+  </ItemGroup>
+
+</Project>

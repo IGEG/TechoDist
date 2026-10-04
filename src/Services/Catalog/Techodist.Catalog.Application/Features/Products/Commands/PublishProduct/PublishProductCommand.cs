@@ -1,3 +1,4 @@
+using Techodist.BuildingBlocks.Core.Diagnostics;
 using Techodist.BuildingBlocks.Core.Results;
 using Techodist.BuildingBlocks.Messaging.IntegrationEvents;
 using Techodist.Catalog.Application.Abstractions;
@@ -47,6 +48,8 @@ internal sealed class PublishProductCommandHandler(
         await products.SaveChangesAsync(cancellationToken);
 
         await cache.InvalidateProductsAsync(cancellationToken);
+
+        TechodistDiagnostics.ProductPublished();
 
         return product.Id;
     }

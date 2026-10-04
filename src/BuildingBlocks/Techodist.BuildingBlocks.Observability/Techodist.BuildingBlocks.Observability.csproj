@@ -5,13 +5,24 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\Techodist.BuildingBlocks.Core\Techodist.BuildingBlocks.Core.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
     <FrameworkReference Include="Microsoft.AspNetCore.App" />
+    <!-- Логи: Serilog в консоль и напрямую в Loki (JSON-поток с лейблами service/environment/app). -->
     <PackageReference Include="Serilog.AspNetCore" />
     <PackageReference Include="Serilog.Sinks.Console" />
+    <PackageReference Include="Serilog.Sinks.Grafana.Loki" />
+    <!-- Трейсы: ASP.NET Core, HttpClient, EF Core и ручные спаны TechodistDiagnostics → OTLP (Collector). -->
     <PackageReference Include="OpenTelemetry.Extensions.Hosting" />
     <PackageReference Include="OpenTelemetry.Instrumentation.AspNetCore" />
     <PackageReference Include="OpenTelemetry.Instrumentation.Http" />
+    <PackageReference Include="OpenTelemetry.Instrumentation.EntityFrameworkCore" />
     <PackageReference Include="OpenTelemetry.Exporter.OpenTelemetryProtocol" />
+    <!-- Метрики: runtime .NET + бизнес-метрики в формате Prometheus на /metrics. -->
+    <PackageReference Include="OpenTelemetry.Instrumentation.Runtime" />
+    <PackageReference Include="OpenTelemetry.Exporter.Prometheus.AspNetCore" />
   </ItemGroup>
 
 </Project>

@@ -12,6 +12,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\..\..\BuildingBlocks\Techodist.BuildingBlocks.Core\Techodist.BuildingBlocks.Core.csproj" />
     <ProjectReference Include="..\..\..\BuildingBlocks\Techodist.BuildingBlocks.Messaging\Techodist.BuildingBlocks.Messaging.csproj" />
   </ItemGroup>
 

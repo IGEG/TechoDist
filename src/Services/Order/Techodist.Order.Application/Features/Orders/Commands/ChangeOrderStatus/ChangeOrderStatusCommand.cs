@@ -1,6 +1,7 @@
 using MassTransit;
 using MediatR;
 using Microsoft.Extensions.Logging;
+using Techodist.BuildingBlocks.Core.Diagnostics;
 using Techodist.BuildingBlocks.Core.Results;
 using Techodist.Order.Application.Abstractions;
 using Techodist.Order.Application.Common;
@@ -28,6 +29,11 @@ internal sealed class ChangeOrderStatusCommandHandler(
         ChangeOrderStatusCommand request,
         CancellationToken cancellationToken)
     {
+        using var activity = TechodistDiagnostics.StartActivity(TechodistDiagnostics.ActivityNames.OrderStatusChange);
+
+        activity?.SetTag("order.id", request.OrderId);
+        activity?.SetTag("order.to_status", request.NewStatus.ToString());
+
         var order = await orders.GetByIdAsync(request.OrderId, cancellationToken);
 
         if (order is null)
@@ -56,6 +62,11 @@ internal sealed class ChangeOrderStatusCommandHandler(
             order.Number.Value,
             oldStatus,
             order.Status);
+
+        activity?.SetTag("order.number", order.Number.Value);
+        activity?.SetTag("order.status", order.Status.ToString());
+
+        TechodistDiagnostics.OrderStatusChanged(oldStatus.ToString(), order.Status.ToString());
 
         return order.ToDto();
     }

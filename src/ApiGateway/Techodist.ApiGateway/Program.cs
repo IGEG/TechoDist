@@ -31,6 +31,10 @@ app.UseForwardedHeaders();
 app.UseExceptionHandler();
 app.UseStatusCodePages();
 
+// Логирование запросов и эндпоинт метрик: раньше middleware, обслуживающих запросы,
+// чтобы в лог попали и отказы (401/429/503), и время работы всего пайплайна шлюза.
+app.UseTechodistObservability();
+
 // CORS до маршрутизации: preflight (OPTIONS) обслуживает middleware и до YARP не доходит.
 app.UseCors(WebExtensions.CorsPolicyName);
 

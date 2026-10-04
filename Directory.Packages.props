@@ -64,11 +64,18 @@
 
     <PackageVersion Include="Serilog.AspNetCore" Version="8.0.3" />
     <PackageVersion Include="Serilog.Sinks.Console" Version="6.0.0" />
+    <!-- Логи прямо в Loki (ADR 0008); 8.x работает с Serilog 4.x из Serilog.AspNetCore 8.0.3. -->
+    <PackageVersion Include="Serilog.Sinks.Grafana.Loki" Version="8.3.2" />
 
     <PackageVersion Include="OpenTelemetry.Extensions.Hosting" Version="1.15.3" />
     <PackageVersion Include="OpenTelemetry.Instrumentation.AspNetCore" Version="1.11.1" />
     <PackageVersion Include="OpenTelemetry.Instrumentation.Http" Version="1.11.1" />
     <PackageVersion Include="OpenTelemetry.Exporter.OpenTelemetryProtocol" Version="1.15.3" />
+    <PackageVersion Include="OpenTelemetry.Instrumentation.Runtime" Version="1.15.1" />
+    <!-- У EF Core-инструментации и Prometheus-экспортёра стабильных релизов нет:
+         держим версии в бэнде 1.15.x, чтобы не расходиться с ядром OpenTelemetry. -->
+    <PackageVersion Include="OpenTelemetry.Instrumentation.EntityFrameworkCore" Version="1.15.1-beta.1" />
+    <PackageVersion Include="OpenTelemetry.Exporter.Prometheus.AspNetCore" Version="1.15.3-beta.1" />
   </ItemGroup>
 
 </Project>

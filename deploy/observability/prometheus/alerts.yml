@@ -1,0 +1,92 @@
+# =============================================================================
+# Правила алертов Prometheus (ADR 0008). Уходят в Alertmanager (localhost:9093).
+#
+# Имена метрик: счётчики OpenTelemetry в формате Prometheus получают суффикс _total
+# (`techodist.notifications.failed` → `techodist_notifications_failed_total`),
+# задержки — гистограмма `http_server_request_duration_seconds_bucket` (семантические
+# конвенции OTel для ASP.NET Core). Лейбл service проставляет скрейп (prometheus.yml).
+#
+# Проверка конфигурации: promtool check rules alerts.yml
+# =============================================================================
+groups:
+  - name: techodist-availability
+    rules:
+      - alert: TechodistServiceDown
+        # Цель недоступна: сервис не запущен или /metrics не отвечает.
+        expr: up{job!="prometheus"} == 0
+        for: 2m
+        labels:
+          severity: critical
+          component: availability
+        annotations:
+          summary: "Сервис {{ $labels.service }} недоступен"
+          description: >-
+            Prometheus не может скрейпить /metrics сервиса {{ $labels.service }}
+            ({{ $labels.instance }}) уже 2 минуты.
+
+      - alert: TechodistMetricsScrapeSlow
+        # Скрейп занимает больше половины интервала — /metrics тормозит весь мониторинг.
+        expr: scrape_duration_seconds{job!="prometheus"} > 7
+        for: 10m
+        labels:
+          severity: warning
+          component: availability
+        annotations:
+          summary: "Медленный скрейп {{ $labels.service }}"
+          description: "Скрейп /metrics сервиса {{ $labels.service }} длится {{ $value | printf \"%.1f\" }} с."
+
+  - name: techodist-http
+    rules:
+      - alert: TechodistHighErrorRate
+        # Доля ответов 5xx среди всех HTTP-запросов сервиса за 5 минут.
+        expr: >-
+          sum by (service) (rate(http_server_request_duration_seconds_count{http_response_status_code=~"5.."}[5m]))
+          /
+          clamp_min(sum by (service) (rate(http_server_request_duration_seconds_count[5m])), 0.001)
+          > 0.05
+        for: 5m
+        labels:
+          severity: warning
+          component: http
+        annotations:
+          summary: "Ошибки 5xx у {{ $labels.service }}"
+          description: "Доля ответов 5xx у {{ $labels.service }} — {{ $value | humanizePercentage }} за 5 минут."
+
+      - alert: TechodistSlowRequests
+        # p95 длительности запроса выше 1.5 с — деградация на пользовательском пути.
+        expr: >-
+          histogram_quantile(
+            0.95,
+            sum by (le, service) (rate(http_server_request_duration_seconds_bucket[5m]))
+          ) > 1.5
+        for: 10m
+        labels:
+          severity: warning
+          component: http
+        annotations:
+          summary: "Медленные запросы у {{ $labels.service }}"
+          description: "p95 запроса у {{ $labels.service }} — {{ $value | printf \"%.2f\" }} с за 5 минут."
+
+  - name: techodist-business
+    rules:
+      - alert: TechodistNotificationFailures
+        # SMTP-сбои: сообщение остаётся в очереди и повторяется брокером, но клиент письма не получил.
+        expr: sum by (service, kind) (increase(techodist_notifications_failed_total[15m])) > 3
+        for: 5m
+        labels:
+          severity: warning
+          component: notifications
+        annotations:
+          summary: "Сбои писем ({{ $labels.kind }})"
+          description: "{{ $value | printf \"%.0f\" }} неудачных отправок писем типа {{ $labels.kind }} за 15 минут."
+
+      - alert: TechodistNoOrders
+        # Заявок нет час: признак, что витрина/корзина/шлюз деградировали.
+        expr: sum(increase(techodist_orders_submitted_total[1h])) == 0
+        for: 1h
+        labels:
+          severity: info
+          component: business
+        annotations:
+          summary: "Час без новых заявок"
+          description: "За последний час через витрину не оформлено ни одной заявки."

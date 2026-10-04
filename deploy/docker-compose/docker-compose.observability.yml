@@ -1,0 +1,157 @@
+# =============================================================================
+# Techodist — локальный стек наблюдаемости (ADR 0008).
+#
+# Приложения в dev запускаются на хосте (IDE / `dotnet run`) и отправляют телеметрию сюда:
+#   трейсы  → OTLP localhost:4317 → OpenTelemetry Collector → Jaeger;
+#   метрики → Prometheus сам забирает /metrics сервисов (localhost:5100…5106);
+#   логи    → Serilog пишет напрямую в Loki (localhost:3100), минуя Promtail.
+#
+# Запуск:    docker compose -f deploy/docker-compose/docker-compose.observability.yml up -d
+# Остановка: ... down            (данные томов сохраняются, `down -v` удалит и их)
+#
+# Совместимо с docker-compose.infrastructure.yml: у стека своя сеть и порты,
+# поэтому оба файла можно держать запущенными одновременно.
+# =============================================================================
+name: techodist-observability
+
+services:
+  # ------------------------------------------------- OpenTelemetry Collector
+  # Точка входа телеметрии: принимает OTLP и раскладывает трейсы в Jaeger.
+  # Метрики и логи идут в обход коллектора (скрейп Prometheus и Serilog→Loki),
+  # поэтому пайплайн здесь только для трейсов — Jaeger остаётся заменяемым.
+  otel-collector:
+    image: otel/opentelemetry-collector-contrib:0.111.0
+    container_name: techodist-otel-collector
+    command: ["--config=/etc/otelcol-contrib/config.yaml"]
+    ports:
+      - "4317:4317"     # OTLP gRPC — сюда смотрят сервисы (Observability:OtlpEndpoint)
+      - "4318:4318"     # OTLP HTTP
+      - "13133:13133"   # health_check
+      - "55679:55679"   # zpages — /debug/tracez для диагностики пайплайна
+    volumes:
+      - ../observability/otel-collector/otel-collector.yaml:/etc/otelcol-contrib/config.yaml:ro
+    networks: [observability]
+
+  # ------------------------------------------------------------------- Jaeger
+  # Хранилище и UI трейсов (in-memory: перезапуск контейнера очищает историю — для dev этого достаточно).
+  jaeger:
+    image: jaegertracing/all-in-one:1.60.0
+    container_name: techodist-jaeger
+    environment:
+      COLLECTOR_OTLP_ENABLED: "true"
+      SPAN_STORAGE_TYPE: memory
+    ports:
+      - "16686:16686"   # UI поиска трейсов
+    networks: [observability]
+
+  # --------------------------------------------------------------- Prometheus
+  # Скрейпит /metrics сервисов на хосте и применяет правила алертов.
+  prometheus:
+    image: prom/prometheus:v2.54.1
+    container_name: techodist-prometheus
+    command:
+      - --config.file=/etc/prometheus/prometheus.yml
+      - --storage.tsdb.retention.time=15d
+      - --web.enable-lifecycle   # POST /-/reload после правки конфигов
+    ports:
+      - "9090:9090"
+    volumes:
+      - ../observability/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - ../observability/prometheus/alerts.yml:/etc/prometheus/alerts.yml:ro
+      - prometheus-data:/prometheus
+    extra_hosts:
+      # Linux-хосты: в Docker Desktop host.docker.internal есть из коробки,
+      # а на Linux его нужно завести вручную (иначе цели 5100…5106 не резолвятся).
+      - "host.docker.internal:host-gateway"
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "http://localhost:9090/-/healthy"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+    networks: [observability]
+
+  # -------------------------------------------------------------- Alertmanager
+  alertmanager:
+    image: prom/alertmanager:v0.27.0
+    container_name: techodist-alertmanager
+    command: ["--config.file=/etc/alertmanager/alertmanager.yml"]
+    ports:
+      - "9093:9093"
+    volumes:
+      - ../observability/alertmanager/alertmanager.yml:/etc/alertmanager/alertmanager.yml:ro
+      - alertmanager-data:/alertmanager
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "http://localhost:9093/-/healthy"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+    networks: [observability]
+
+  # --------------------------------------------------------------------- Loki
+  # Принимает логи напрямую от Serilog (Grafana Loki sink), просмотр — в Grafana.
+  loki:
+    image: grafana/loki:3.1.1
+    container_name: techodist-loki
+    command: ["-config.file=/etc/loki/loki.yaml"]
+    ports:
+      - "3100:3100"
+    volumes:
+      - ../observability/loki/loki.yaml:/etc/loki/loki.yaml:ro
+      - loki-data:/loki
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "http://localhost:3100/ready"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+    networks: [observability]
+
+  # ----------------------------------------------------------------- Promtail
+  # Собирает stdout контейнеров Techodist через docker.sock. Приложениям, запущенным
+  # на хосте, он не нужен: их логи Serilog отправляет в Loki напрямую. Promtail нужен,
+  # когда сервисы тоже в контейнерах (локальный compose, Фаза 10 — Kubernetes).
+  promtail:
+    image: grafana/promtail:3.1.1
+    container_name: techodist-promtail
+    command: ["-config.file=/etc/promtail/promtail.yaml"]
+    volumes:
+      - ../observability/promtail/promtail.yaml:/etc/promtail/promtail.yaml:ro
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    depends_on:
+      loki:
+        condition: service_healthy
+    networks: [observability]
+
+  # ------------------------------------------------------------------ Grafana
+  # Единое окно: метрики (Prometheus), логи (Loki) и переход в трейсы (Jaeger).
+  # Источники данных и дашборды поднимаются провижном из deploy/observability/grafana.
+  grafana:
+    image: grafana/grafana:11.2.0
+    container_name: techodist-grafana
+    environment:
+      GF_SECURITY_ADMIN_USER: ${GRAFANA_ADMIN_USER:-admin}
+      GF_SECURITY_ADMIN_PASSWORD: ${GRAFANA_ADMIN_PASSWORD:-admin}
+      GF_USERS_ALLOW_SIGN_UP: "false"
+      GF_ANALYTICS_REPORTING_ENABLED: "false"
+      GF_ANALYTICS_CHECK_FOR_UPDATES: "false"
+    ports:
+      - "3000:3000"
+    volumes:
+      - ../observability/grafana/provisioning:/etc/grafana/provisioning:ro
+      - ../observability/grafana/dashboards:/var/lib/grafana/dashboards:ro
+      - grafana-data:/var/lib/grafana
+    depends_on:
+      prometheus:
+        condition: service_healthy
+      loki:
+        condition: service_healthy
+    networks: [observability]
+
+volumes:
+  prometheus-data:
+  alertmanager-data:
+  loki-data:
+  grafana-data:
+
+networks:
+  observability:
+    driver: bridge

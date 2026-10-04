@@ -1,0 +1,20 @@
+# =============================================================================
+# Провижн дашбордов Grafana (ADR 0008).
+# JSON-файлы лежат в deploy/observability/grafana/dashboards и смонтированы
+# в /var/lib/grafana/dashboards. Правки в UI сохраняются в БД Grafana: чтобы
+# вернуть файловую версию, удалите дашборд или перезапустите Grafana.
+# =============================================================================
+apiVersion: 1
+
+providers:
+  - name: techodist
+    orgId: 1
+    folder: Techodist
+    folderUid: techodist
+    type: file
+    disableDeletion: false
+    updateIntervalSeconds: 30
+    allowUiUpdates: true
+    options:
+      path: /var/lib/grafana/dashboards
+      foldersFromFilesStructure: false

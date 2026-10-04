@@ -58,3 +58,54 @@ jobs:
 
       - name: Build
         run: npm run build
+
+  deploy-configs:
+    name: Deploy configs validation
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Docker Compose config (infrastructure + observability)
+        run: |
+          docker compose -f deploy/docker-compose/docker-compose.infrastructure.yml config -q
+          docker compose -f deploy/docker-compose/docker-compose.observability.yml config -q
+
+      - name: Prometheus config and alert rules
+        run: |
+          docker run --rm --entrypoint promtool \
+            -v "$PWD/deploy/observability/prometheus:/etc/prometheus:ro" \
+            prom/prometheus:v2.54.1 check config /etc/prometheus/prometheus.yml
+          docker run --rm --entrypoint promtool \
+            -v "$PWD/deploy/observability/prometheus:/etc/prometheus:ro" \
+            prom/prometheus:v2.54.1 check rules /etc/prometheus/alerts.yml
+
+      - name: Alertmanager config
+        run: |
+          docker run --rm --entrypoint amtool \
+            -v "$PWD/deploy/observability/alertmanager:/etc/alertmanager:ro" \
+            prom/alertmanager:v0.27.0 check-config /etc/alertmanager/alertmanager.yml
+
+      - name: OpenTelemetry Collector config
+        run: |
+          docker run --rm \
+            -v "$PWD/deploy/observability/otel-collector:/etc/otelcol-contrib:ro" \
+            otel/opentelemetry-collector-contrib:0.111.0 validate --config=/etc/otelcol-contrib/otel-collector.yaml
+
+      - name: Loki config
+        run: |
+          docker run --rm \
+            -v "$PWD/deploy/observability/loki/loki.yaml:/etc/loki/loki.yaml:ro" \
+            grafana/loki:3.1.1 "-config.file=/etc/loki/loki.yaml" "-verify-config"
+
+      - name: Promtail config
+        run: |
+          docker run --rm \
+            -v "$PWD/deploy/observability/promtail/promtail.yaml:/etc/promtail/promtail.yaml:ro" \
+            grafana/promtail:3.1.1 "-config.file=/etc/promtail/promtail.yaml" "-check-syntax"
+
+      - name: Grafana dashboards JSON
+        run: |
+          for file in deploy/observability/grafana/dashboards/*.json; do
+            python3 -m json.tool "$file" > /dev/null
+            echo "OK: $file"
+          done

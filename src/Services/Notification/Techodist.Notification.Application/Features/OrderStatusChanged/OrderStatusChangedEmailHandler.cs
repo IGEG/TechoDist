@@ -1,7 +1,9 @@
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
+using Techodist.BuildingBlocks.Core.Diagnostics;
 using Techodist.BuildingBlocks.Messaging.IntegrationEvents;
 using Techodist.Notification.Application.Abstractions;
+using Techodist.Notification.Application.Email;
 using Techodist.Notification.Application.Options;
 using Techodist.Notification.Application.Templates;
 
@@ -34,7 +36,11 @@ public sealed class OrderStatusChangedEmailHandler(
             return;
         }
 
-        await emails.SendAsync(
+        await EmailTelemetry.SendAsync(
+            emails,
+            logger,
+            TechodistDiagnostics.NotificationKinds.CustomerStatusChange,
+            message.OrderNumber,
             OrderEmailTemplates.StatusChange(message, options.Value.StoreName),
             cancellationToken);
 

@@ -20,6 +20,7 @@ var app = builder.Build();
 
 await CatalogDataSeeder.SeedAsync(app.Services, app.Logger);
 
+app.UseTechodistObservability();
 app.UseTechodistWebApi();
 app.UseAuthentication();
 app.UseAuthorization();

@@ -25,6 +25,7 @@ var app = builder.Build();
 
 await IdentityDataSeeder.SeedAsync(app.Services, app.Configuration, app.Logger);
 
+app.UseTechodistObservability();
 app.UseTechodistWebApi();
 
 // UseAuthentication также включает обработку /connect/token сервером OpenIddict

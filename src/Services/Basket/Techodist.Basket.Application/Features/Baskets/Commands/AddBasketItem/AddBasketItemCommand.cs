@@ -3,6 +3,7 @@ using Techodist.Basket.Application.Common;
 using Techodist.Basket.Application.Dtos;
 using Techodist.Basket.Domain.Entities;
 using Techodist.Basket.Domain.ValueObjects;
+using Techodist.BuildingBlocks.Core.Diagnostics;
 using Techodist.BuildingBlocks.Core.Results;
 using MediatR;
 
@@ -58,6 +59,8 @@ internal sealed class AddBasketItemCommandHandler(
         }
 
         await baskets.SaveAsync(basket, cancellationToken);
+
+        TechodistDiagnostics.BasketItemAdded(request.Quantity);
 
         return basket.ToDto();
     }

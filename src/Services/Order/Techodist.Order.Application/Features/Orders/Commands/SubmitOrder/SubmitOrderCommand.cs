@@ -1,6 +1,7 @@
 using MassTransit;
 using MediatR;
 using Microsoft.Extensions.Logging;
+using Techodist.BuildingBlocks.Core.Diagnostics;
 using Techodist.BuildingBlocks.Core.Results;
 using Techodist.Order.Application.Abstractions;
 using Techodist.Order.Application.Common;
@@ -36,6 +37,11 @@ internal sealed class SubmitOrderCommandHandler(
         SubmitOrderCommand request,
         CancellationToken cancellationToken)
     {
+        using var activity = TechodistDiagnostics.StartActivity(TechodistDiagnostics.ActivityNames.OrderSubmit);
+
+        activity?.SetTag("order.basket_id", request.BasketId);
+        activity?.SetTag("order.channel", request.PreferredChannel.ToString());
+
         if (request.BasketId == Guid.Empty)
         {
             return Result.Failure<OrderDto>(Error.Validation(
@@ -83,6 +89,15 @@ internal sealed class SubmitOrderCommandHandler(
             order.Id,
             order.TotalAmount,
             order.Currency);
+
+        activity?.SetTag("order.number", order.Number.Value);
+        activity?.SetTag("order.currency", order.Currency);
+        activity?.SetTag("order.quantity", order.TotalQuantity);
+
+        TechodistDiagnostics.OrderSubmitted(
+            order.TotalAmount,
+            order.Currency,
+            request.PreferredChannel.ToString());
 
         await TryClearBasketAsync(request.BasketId, cancellationToken);
 

@@ -23,6 +23,7 @@ builder.Services.AddTechodistWebApi(builder.Configuration, "Techodist · Search 
 
 var app = builder.Build();
 
+app.UseTechodistObservability();
 app.UseTechodistWebApi();
 app.MapControllers();
 

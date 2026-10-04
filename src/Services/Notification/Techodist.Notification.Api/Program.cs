@@ -19,6 +19,7 @@ builder.Services.AddTechodistWebApi(builder.Configuration, "Techodist · Notific
 
 var app = builder.Build();
 
+app.UseTechodistObservability();
 app.UseTechodistWebApi();
 
 app.Run();

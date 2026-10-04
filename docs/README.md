@@ -9,7 +9,16 @@
   [Notification](../src/Services/Notification/README.md),
   [Search](../src/Services/Search/README.md),
   [фронтенд (SPA)](../src/Frontend/README.md),
-  [docker-compose (инфраструктура)](../deploy/docker-compose/README.md).
+  [docker-compose (инфраструктура)](../deploy/docker-compose/README.md),
+  [наблюдаемость (Prometheus/Grafana/Loki/Jaeger)](../deploy/observability/README.md).
+
+## Наблюдаемость
+
+Стек наблюдаемости (ADR 0008) живёт в [deploy/observability](../deploy/observability/README.md):
+метрики — Prometheus + Grafana, логи — Serilog → Loki, трейсы — OpenTelemetry Collector → Jaeger,
+алерты — Alertmanager. Два дашборда провижнятся из `deploy/observability/grafana/dashboards`
+(«Сервисы (RED)» и «Бизнес-метрики»), правила алертов — `deploy/observability/prometheus/alerts.yml`,
+точки инструментирования — `TechodistDiagnostics` (`ActivitySource`/`Meter` = `Techodist`).
 
 ## Быстрая навигация по решениям (ADR)
 
